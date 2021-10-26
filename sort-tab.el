@@ -262,7 +262,7 @@ Returns non-nil if the new state is enabled.
           (setq tab (if (eq buf current-buffer)
                         (propertize (format " %s " (buffer-name buf)) 'face 'sort-tab-current-tab-face)
                       (propertize (format " %s " (buffer-name buf)) 'face 'sort-tab-inactive-tab-face)))
-          (setq tab-separator (propertize (format "|" (buffer-name buf)) 'face 'sort-tab-separator-face))
+          (setq tab-separator (propertize "|"  'face 'sort-tab-separator-face))
           (insert tab)
           (insert tab-separator)
 
