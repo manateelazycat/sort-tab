@@ -231,13 +231,18 @@ Returns non-nil if the new state is enabled.
   (with-current-buffer buf
     major-mode))
 
+(defun sort-tab-is-eaf-browser-buffer-p (buf)
+  (with-current-buffer buf
+    (and (eq major-mode 'eaf-mode)
+         (equal eaf--buffer-app-name "browser"))))
+
 (defun sort-tab-buffer-freq-higher-p (buf1 buf2)
   "Return t if the used frequency of BUF1 is higher than BUF2."
-  (cond ((and (eq (sort-tab-get-buffer-mode buf1) 'eaf-mode)
-              (not (eq (sort-tab-get-buffer-mode buf2) 'eaf-mode)))
+  (cond ((and (sort-tab-is-eaf-browser-buffer-p buf1)
+              (not (sort-tab-is-eaf-browser-buffer-p buf2)))
          t)
-        ((and (eq (sort-tab-get-buffer-mode buf2) 'eaf-mode)
-              (not (eq (sort-tab-get-buffer-mode buf1) 'eaf-mode)))
+        ((and (sort-tab-is-eaf-browser-buffer-p buf2)
+              (not (sort-tab-is-eaf-browser-buffer-p buf1)))
          nil)
         (t
          (> (sort-tab-buffer-freq buf1)
