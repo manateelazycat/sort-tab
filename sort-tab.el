@@ -60,7 +60,7 @@
   "Display sort-tab in top of Emacs."
   :group 'convenience)
 
-(defcustom sort-tab-buffer "*sort-tab*"
+(defcustom sort-tab-buffer-name "*sort-tab*"
   "The buffer name of sort-tab."
   :type 'string)
 
@@ -127,11 +127,13 @@ Returns non-nil if the new state is enabled.
       (sort-tab-turn-on)
     (sort-tab-turn-off)))
 
+(defun sort-tab-get-buffer ()
+  (get-buffer-create sort-tab-buffer-name))
+
 (defun sort-tab-turn-on ()
   (interactive)
   ;; Create sort-tab buffer.
-  (generate-new-buffer sort-tab-buffer)
-  (with-current-buffer sort-tab-buffer
+  (with-current-buffer (sort-tab-get-buffer)
     ;; Disable line numbers mode.
     (when display-line-numbers
       (setq-local display-line-numbers nil))
@@ -169,7 +171,7 @@ Returns non-nil if the new state is enabled.
 
   ;; Record sort-tab window.
   (setq sort-tab-window (selected-window))
-  (switch-to-buffer sort-tab-buffer)
+  (switch-to-buffer (sort-tab-get-buffer))
   (other-window 1)
 
   ;; Set window dedicated to make sure pop buffer won't use sort-tab window.
@@ -191,9 +193,8 @@ Returns non-nil if the new state is enabled.
     (set-window-parameter sort-tab-window 'no-other-window nil)
 
     ;; Kill sort-tab window.
-    (ignore-errors
-      (with-current-buffer sort-tab-buffer
-        (kill-buffer-and-window))))
+    (with-current-buffer (sort-tab-get-buffer)
+      (kill-buffer-and-window)))
 
   ;; Reset sort-tab window.
   (setq sort-tab-window nil)
@@ -205,7 +206,7 @@ Returns non-nil if the new state is enabled.
   (remove-hook 'buffer-list-update-hook #'sort-tab-update-list))
 
 (defun sort-tab-live-p ()
-  (and (buffer-live-p (get-buffer sort-tab-buffer))
+  (and (buffer-live-p (get-buffer sort-tab-buffer-name))
        sort-tab-window
        (window-live-p sort-tab-window)))
 
@@ -274,11 +275,11 @@ Returns non-nil if the new state is enabled.
       ;; (message "**** %s" last-command)
       (let* ((current-tab-start-column 0)
              (current-tab-end-column 0)
-             (tab-window (get-buffer-window sort-tab-buffer))
+             (tab-window (get-buffer-window (sort-tab-get-buffer)))
              found-current-tab
              tab-separator
              tab)
-        (with-current-buffer sort-tab-buffer
+        (with-current-buffer (sort-tab-get-buffer)
           ;; Clean buffer.
           (erase-buffer)
 
@@ -370,6 +371,12 @@ Returns non-nil if the new state is enabled.
     (kill-buffer buf)
     (setq sort-tab-visible-buffers (cl-remove-if (lambda (b) (eq b buf)) sort-tab-visible-buffers))
     (switch-to-buffer prev-buffer)))
+
+(defun sort-tab-kill-buffer-advisor (orig-fun &optional arg &rest args)
+  (if (equal (buffer-name) sort-tab-buffer-name)
+      (message "Can't kill sort-tab buffer, use sort-tab-turn-off to exit sort-tab mode.")
+    (apply orig-fun arg args)))
+(advice-add #'kill-buffer :around #'sort-tab-kill-buffer-advisor)
 
 (provide 'sort-tab)
 
