@@ -267,12 +267,15 @@ Returns non-nil if the new state is enabled.
 (defun sort-tab-need-update-p (current-buffer)
   (and
    (not (window-minibuffer-p))
+   (not (sort-tab-buffer-need-hide-p current-buffer))
    (not (eq current-buffer sort-tab-last-active-buffer))))
 
 (defun sort-tab-update-list ()
   (let ((current-buffer (current-buffer)))
     (when (sort-tab-need-update-p current-buffer)
-      ;; (message "**** %s" last-command)
+      ;; Debug usage.
+      ;; (message "**** %s %s" last-command (buffer-name current-buffer))
+
       (let* ((current-tab-start-column 0)
              (current-tab-end-column 0)
              (tab-window (get-buffer-window (sort-tab-get-buffer)))
@@ -285,7 +288,7 @@ Returns non-nil if the new state is enabled.
 
           ;; Don't sort tabs if using sort-tab commands.
           (unless sort-tab-inhibit-resort
-            (setq sort-tab-visible-buffers (sort-tab-get-new-buffer-list current-buffer)))
+            (setq sort-tab-visible-buffers (sort-tab-get-buffer-list)))
 
           (dolist (buf sort-tab-visible-buffers)
             ;; Insert tab.
@@ -316,12 +319,8 @@ Returns non-nil if the new state is enabled.
           (setq sort-tab-last-active-buffer current-buffer)
           )))))
 
-(defun sort-tab-get-new-buffer-list (current-buffer)
-  (append (list current-buffer) (sort-tab-get-other-buffer-list (buffer-name current-buffer))))
-
-(defun sort-tab-get-other-buffer-list (current-buffer-name)
+(defun sort-tab-get-buffer-list ()
   (let ((bufs (buffer-list)))
-    (setq bufs (cl-remove-if (lambda (buf) (or (eq (buffer-name buf) current-buffer-name))) bufs))
     (setq bufs (cl-remove-if #'sort-tab-buffer-need-hide-p bufs))
     (setq bufs (sort bufs #'sort-tab-buffer-freq-higher-p))
     bufs))
