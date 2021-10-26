@@ -1,4 +1,4 @@
-<img src="./images/screenshot.png" width="200">
+<img src="./screenshot.png" width="200">
 
 # What is sort-tab?
 sort-tab is smarter tab solution for Emacs, it sort tab with using frequency.
