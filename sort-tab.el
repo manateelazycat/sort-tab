@@ -1,4 +1,4 @@
-;;; sort-tab.el --- Provide an out of box configuration to use tab in Emacs.
+;;; sort-tab.el --- Provide an out of box configuration to use tab in Emacs.   -*- lexical-binding: t; -*-
 
 ;; Filename: sort-tab.el
 ;; Description: Provide an out of box configuration to use sort-tab in Emacs.
@@ -252,6 +252,7 @@ Returns non-nil if the new state is enabled.
           (current-buffer-name (buffer-name))
           (current-tab-start-column 0)
           (current-tab-end-column 0)
+          (tab-window (get-buffer-window sort-tab-buffer))
           found-current-tab
           tab-separator
           tab)
@@ -280,12 +281,13 @@ Returns non-nil if the new state is enabled.
             (setq current-tab-end-column (+ current-tab-end-column (length tab) (length tab-separator)))))
 
         ;; Make tab always visible.
-        (with-selected-window (get-buffer-window sort-tab-buffer)
-          (cond ((> current-tab-end-column (+ (window-hscroll) (window-width)))
-                 (scroll-left (- current-tab-end-column (window-hscroll) (window-width))))
-                ((< current-tab-start-column (window-hscroll))
-                 (set-window-hscroll (get-buffer-window sort-tab-buffer) current-tab-start-column))
-                ))))))
+        (when tab-window
+          (with-selected-window tab-window
+           (cond ((> current-tab-end-column (+ (window-hscroll) (window-width)))
+                  (scroll-left (- current-tab-end-column (window-hscroll) (window-width))))
+                 ((< current-tab-start-column (window-hscroll))
+                  (set-window-hscroll tab-window current-tab-start-column))
+                 )))))))
 
 (defun sort-tab-get-other-buffer-list (current-buffer-name)
   (let ((bufs (buffer-list)))
