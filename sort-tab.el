@@ -238,6 +238,12 @@ Returns non-nil if the new state is enabled.
      ((eq (aref name 0) ?\s) t)
      ((string-prefix-p " *" name) t)
      ((string-prefix-p "*" name) t)
+     ((with-current-buffer buf
+        (or (derived-mode-p 'magit-status-mode)
+            (derived-mode-p 'magit-process-mode)
+            (derived-mode-p 'magit-diff-mode)
+            ))
+      t)
      )))
 
 (defun sort-tab-update-list ()
