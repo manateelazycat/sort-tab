@@ -21,3 +21,4 @@ sort-tab stay on top of Emacs, it won't waste any vertically space when you spli
 * sort-tab-select-prev-tab: select previous tab
 * sort-tab-select-first-tab: select first tab
 * sort-tab-select-last-tab: select last tab
+* sort-tab-close-current-tab: close current tab

@@ -77,7 +77,7 @@
      :bold t :inherit mode-line-active))
   "Face for current tab.")
 
-(defface sort-tab-inactive-tab-face
+(defface sort-tab-other-tab-face
   '((((background light))
      :foreground "#665c54" :inherit 'mode-line-active)
     (t
@@ -266,7 +266,7 @@ Returns non-nil if the new state is enabled.
           ;; Insert tab.
           (setq tab (if (eq buf current-buffer)
                         (propertize (format " %s " (buffer-name buf)) 'face 'sort-tab-current-tab-face)
-                      (propertize (format " %s " (buffer-name buf)) 'face 'sort-tab-inactive-tab-face)))
+                      (propertize (format " %s " (buffer-name buf)) 'face 'sort-tab-other-tab-face)))
           (setq tab-separator (propertize "|"  'face 'sort-tab-separator-face))
           (insert tab)
           (insert tab-separator)
@@ -325,6 +325,20 @@ Returns non-nil if the new state is enabled.
   (interactive)
   (let* ((sort-tab-inhibit-resort t))
     (switch-to-buffer (car (last sort-tab-visible-buffers)))))
+
+(defun sort-tab-close-current-tab ()
+  (interactive)
+  (let* ((sort-tab-inhibit-resort t)
+         (buf (current-buffer))
+         (index (cl-position buf sort-tab-visible-buffers :test #'eq))
+         (prev-buffer (cond
+                       ((or (null index) (eq index 0))
+                        (car (last sort-tab-visible-buffers)))
+                       (t
+                        (nth (1- index) sort-tab-visible-buffers)))))
+    (kill-buffer buf)
+    (setq sort-tab-visible-buffers (cl-remove-if (lambda (b) (eq b buf)) sort-tab-visible-buffers))
+    (switch-to-buffer prev-buffer)))
 
 (provide 'sort-tab)
 
