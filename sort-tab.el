@@ -227,10 +227,21 @@ Returns non-nil if the new state is enabled.
   (or (buffer-local-value 'sort-tab-buffer-freq buf)
       0))
 
+(defun sort-tab-get-buffer-mode (buf)
+  (with-current-buffer buf
+    major-mode))
+
 (defun sort-tab-buffer-freq-higher-p (buf1 buf2)
   "Return t if the used frequency of BUF1 is higher than BUF2."
-  (> (sort-tab-buffer-freq buf1)
-     (sort-tab-buffer-freq buf2)))
+  (cond ((and (eq (sort-tab-get-buffer-mode buf1) 'eaf-mode)
+              (not (eq (sort-tab-get-buffer-mode buf2) 'eaf-mode)))
+         t)
+        ((and (eq (sort-tab-get-buffer-mode buf2) 'eaf-mode)
+              (not (eq (sort-tab-get-buffer-mode buf1) 'eaf-mode)))
+         nil)
+        (t
+         (> (sort-tab-buffer-freq buf1)
+            (sort-tab-buffer-freq buf2)))))
 
 (defun sort-tab-buffer-need-hide-p (buf)
   (let* ((name (buffer-name buf)))
