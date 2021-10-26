@@ -111,6 +111,8 @@
 
 (defvar sort-tab-inhibit-resort nil)
 
+(defvar sort-tab-last-active-buffer nil)
+
 (define-minor-mode sort-tab-mode
   "Toggle display of a sort-tab.
 With prefix argument ARG, turn on if positive, otherwise off.
@@ -251,6 +253,7 @@ Returns non-nil if the new state is enabled.
 (defun sort-tab-buffer-need-hide-p (buf)
   (let* ((name (buffer-name buf)))
     (or
+     (cl-some (lambda (prefix) (string-prefix-p prefix name)) '("*Backtrace" "*scratch" "*Faces" "*Messages" "*Customize"))
      (eq (aref name 0) ?\s)             ;not hidden buffer
      (string-prefix-p " *" name)        ;not start with ` *'
      (string-prefix-p "*" name)         ;not start with `*'
@@ -260,48 +263,60 @@ Returns non-nil if the new state is enabled.
            (derived-mode-p 'magit-diff-mode)
            )))))
 
+(defun sort-tab-need-update-p (current-buffer)
+  (and
+   (not (window-minibuffer-p))
+   (not (eq current-buffer sort-tab-last-active-buffer))))
+
 (defun sort-tab-update-list ()
-  (unless (window-minibuffer-p)
-    (let ((current-buffer (current-buffer))
-          (current-buffer-name (buffer-name))
-          (current-tab-start-column 0)
-          (current-tab-end-column 0)
-          (tab-window (get-buffer-window sort-tab-buffer))
-          found-current-tab
-          tab-separator
-          tab)
-      (with-current-buffer sort-tab-buffer
-        ;; Clean buffer.
-        (erase-buffer)
+  (let ((current-buffer (current-buffer)))
+    (when (sort-tab-need-update-p current-buffer)
+      ;; (message "**** %s" last-command)
+      (let* ((current-tab-start-column 0)
+             (current-tab-end-column 0)
+             (tab-window (get-buffer-window sort-tab-buffer))
+             found-current-tab
+             tab-separator
+             tab)
+        (with-current-buffer sort-tab-buffer
+          ;; Clean buffer.
+          (erase-buffer)
 
-        ;; Don't sort tabs if using sort-tab commands.
-        (unless sort-tab-inhibit-resort
-          (setq sort-tab-visible-buffers (append (list current-buffer) (sort-tab-get-other-buffer-list current-buffer-name))))
+          ;; Don't sort tabs if using sort-tab commands.
+          (unless sort-tab-inhibit-resort
+            (setq sort-tab-visible-buffers (sort-tab-get-new-buffer-list current-buffer)))
 
-        (dolist (buf sort-tab-visible-buffers)
-          ;; Insert tab.
-          (setq tab (if (eq buf current-buffer)
-                        (propertize (format " %s " (buffer-name buf)) 'face 'sort-tab-current-tab-face)
-                      (propertize (format " %s " (buffer-name buf)) 'face 'sort-tab-other-tab-face)))
-          (setq tab-separator (propertize "|"  'face 'sort-tab-separator-face))
-          (insert tab)
-          (insert tab-separator)
+          (dolist (buf sort-tab-visible-buffers)
+            ;; Insert tab.
+            (setq tab (if (eq buf current-buffer)
+                          (propertize (format " %s " (buffer-name buf)) 'face 'sort-tab-current-tab-face)
+                        (propertize (format " %s " (buffer-name buf)) 'face 'sort-tab-other-tab-face)))
+            (setq tab-separator (propertize "|"  'face 'sort-tab-separator-face))
+            (insert tab)
+            (insert tab-separator)
 
-          ;; Calculate the current tab column.
-          (unless found-current-tab
-            (when (eq buf current-buffer)
-              (setq found-current-tab t)
-              (setq current-tab-start-column current-tab-end-column))
-            (setq current-tab-end-column (+ current-tab-end-column (length tab) (length tab-separator)))))
+            ;; Calculate the current tab column.
+            (unless found-current-tab
+              (when (eq buf current-buffer)
+                (setq found-current-tab t)
+                (setq current-tab-start-column current-tab-end-column))
+              (setq current-tab-end-column (+ current-tab-end-column (length tab) (length tab-separator)))))
 
-        ;; Make tab always visible.
-        (when tab-window
-          (with-selected-window tab-window
-            (cond ((> current-tab-end-column (+ (window-hscroll) (window-width)))
-                   (scroll-left (- current-tab-end-column (window-hscroll) (window-width))))
-                  ((< current-tab-start-column (window-hscroll))
-                   (set-window-hscroll tab-window current-tab-start-column))
-                  )))))))
+          ;; Make tab always visible.
+          (when tab-window
+            (with-selected-window tab-window
+              (cond ((> current-tab-end-column (+ (window-hscroll) (window-width)))
+                     (scroll-left (- current-tab-end-column (window-hscroll) (window-width))))
+                    ((< current-tab-start-column (window-hscroll))
+                     (set-window-hscroll tab-window current-tab-start-column))
+                    )))
+
+          ;; Record last active buffer.
+          (setq sort-tab-last-active-buffer current-buffer)
+          )))))
+
+(defun sort-tab-get-new-buffer-list (current-buffer)
+  (append (list current-buffer) (sort-tab-get-other-buffer-list (buffer-name current-buffer))))
 
 (defun sort-tab-get-other-buffer-list (current-buffer-name)
   (let ((bufs (buffer-list)))
