@@ -320,15 +320,6 @@ Returns non-nil if the new state is enabled.
   (let* ((sort-tab-inhibit-resort t))
     (switch-to-buffer (car (last sort-tab-visible-buffers)))))
 
-;; Eldoc always change user's buffer name, it's annoying.
-;; This advice just remove feature that show eldoc message in echo area.
-(defun sort-tab-eldoc-advisor (orig-fun &optional arg &rest args)
-  (with-current-buffer eldoc--doc-buffer
-    (setq buffer-read-only nil)
-    (erase-buffer))
-  eldoc--doc-buffer)
-(advice-add #'eldoc--format-doc-buffer :around #'sort-tab-eldoc-advisor)
-
 (provide 'sort-tab)
 
 ;;; sort-tab.el ends here
