@@ -234,17 +234,15 @@ Returns non-nil if the new state is enabled.
 
 (defun sort-tab-buffer-need-hide-p (buf)
   (let* ((name (buffer-name buf)))
-    (cond
-     ((eq (aref name 0) ?\s) t)
-     ((string-prefix-p " *" name) t)
-     ((string-prefix-p "*" name) t)
-     ((with-current-buffer buf
-        (or (derived-mode-p 'magit-status-mode)
-            (derived-mode-p 'magit-process-mode)
-            (derived-mode-p 'magit-diff-mode)
-            ))
-      t)
-     )))
+    (or
+     (eq (aref name 0) ?\s)             ;not hidden buffer
+     (string-prefix-p " *" name)        ;not start with ` *'
+     (string-prefix-p "*" name)         ;not start with `*'
+     (with-current-buffer buf           ;not magit buffer
+       (or (derived-mode-p 'magit-status-mode)
+           (derived-mode-p 'magit-process-mode)
+           (derived-mode-p 'magit-diff-mode)
+           )))))
 
 (defun sort-tab-update-list ()
   (unless (window-minibuffer-p)
@@ -283,11 +281,11 @@ Returns non-nil if the new state is enabled.
         ;; Make tab always visible.
         (when tab-window
           (with-selected-window tab-window
-           (cond ((> current-tab-end-column (+ (window-hscroll) (window-width)))
-                  (scroll-left (- current-tab-end-column (window-hscroll) (window-width))))
-                 ((< current-tab-start-column (window-hscroll))
-                  (set-window-hscroll tab-window current-tab-start-column))
-                 )))))))
+            (cond ((> current-tab-end-column (+ (window-hscroll) (window-width)))
+                   (scroll-left (- current-tab-end-column (window-hscroll) (window-width))))
+                  ((< current-tab-start-column (window-hscroll))
+                   (set-window-hscroll tab-window current-tab-start-column))
+                  )))))))
 
 (defun sort-tab-get-other-buffer-list (current-buffer-name)
   (let ((bufs (buffer-list)))
