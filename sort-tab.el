@@ -70,7 +70,6 @@
 
 (defcustom sort-tab-name-max-length 30
   "Max length of tab name."
-  :group 'awesome-tab
   :type 'int)
 
 (defface sort-tab-current-tab-face
