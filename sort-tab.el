@@ -263,6 +263,7 @@ Returns non-nil if the new state is enabled.
            (derived-mode-p 'magit-process-mode)
            (derived-mode-p 'magit-diff-mode)
            (derived-mode-p 'magit-log-mode)
+           (derived-mode-p 'magit-status-mode)
            )))))
 
 (defun sort-tab-need-update-p (current-buffer)
