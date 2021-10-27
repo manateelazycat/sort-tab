@@ -75,25 +75,23 @@
 
 (defface sort-tab-current-tab-face
   '((((background light))
-     :background "#d5c9c0" :foreground "#282828"
-     :bold t :inherit mode-line-active)
+     :background "#d5c9c0" :foreground "#282828" :bold t)
     (t
-     :background "#504945" :foreground "#fbf1c7"
-     :bold t :inherit mode-line-active))
+     :background "#504945" :foreground "#fbf1c7" :bold t))
   "Face for current tab.")
 
 (defface sort-tab-other-tab-face
   '((((background light))
-     :foreground "#665c54" :inherit 'mode-line-active)
+     :foreground "#665c54" :bold nil)
     (t
-     :foreground "#bdae93" :bold nil :inherit 'mode-line-active))
+     :foreground "#bdae93" :bold nil))
   "Face for inactive tabs.")
 
 (defface sort-tab-separator-face
   '((((background light))
-     :foreground "#bdae93" :bold t :inherit 'mode-line-active)
+     :foreground "#bdae93" :bold t)
     (t
-     :foreground "#665c54" :bold t :inherit 'mode-line-active))
+     :foreground "#665c54" :bold t))
   "Face for separator.")
 
 (defvar sort-tab-mode-map
@@ -299,17 +297,7 @@ Returns non-nil if the new state is enabled.
 
           (dolist (buf sort-tab-visible-buffers)
             ;; Insert tab.
-            (setq tab (propertize
-                       (format " %s "
-                               (let ((bufname (buffer-name buf))
-                                     (ellipsis "..."))
-                                 (if (> (length bufname) sort-tab-name-max-length)
-                                     (format "%s%s" (substring bufname 0 (- sort-tab-name-max-length (length ellipsis))) ellipsis)
-                                   bufname)))
-                       'face
-                       (if (eq buf current-buffer)
-                           'sort-tab-current-tab-face
-                         'sort-tab-other-tab-face)))
+            (setq tab (sort-tab-get-tab-name buf current-buffer))
             (setq tab-separator (propertize "|"  'face 'sort-tab-separator-face))
             (insert tab)
             (insert tab-separator)
@@ -333,6 +321,19 @@ Returns non-nil if the new state is enabled.
           ;; Record last active buffer.
           (setq sort-tab-last-active-buffer current-buffer)
           )))))
+
+(defun sort-tab-get-tab-name (buf current-buffer)
+  (propertize
+   (format " %s "
+           (let ((bufname (buffer-name buf))
+                 (ellipsis "..."))
+             (if (> (length bufname) sort-tab-name-max-length)
+                 (format "%s%s" (substring bufname 0 (- sort-tab-name-max-length (length ellipsis))) ellipsis)
+               bufname)))
+   'face
+   (if (eq buf current-buffer)
+       'sort-tab-current-tab-face
+     'sort-tab-other-tab-face)))
 
 (defun sort-tab-get-buffer-list ()
   (let ((bufs (buffer-list)))
