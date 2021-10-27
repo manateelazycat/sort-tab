@@ -375,8 +375,10 @@ Returns non-nil if the new state is enabled.
                         (car (last sort-tab-visible-buffers)))
                        (t
                         (nth (1- index) sort-tab-visible-buffers)))))
+    ;; Update `sort-tab-visible-buffers' first.
+    (setq sort-tab-visible-buffers (delete buf sort-tab-visible-buffers))
+    ;; Then kill current buffer and switch to previous buffer.
     (kill-buffer buf)
-    (setq sort-tab-visible-buffers (cl-remove-if (lambda (b) (eq b buf)) sort-tab-visible-buffers))
     (switch-to-buffer prev-buffer)))
 
 (defun sort-tab-kill-buffer-advisor (orig-fun &optional arg &rest args)
