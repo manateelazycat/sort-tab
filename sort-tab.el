@@ -326,6 +326,10 @@ Returns non-nil if the new state is enabled.
    (format " %s "
            (let ((bufname (buffer-name buf))
                  (ellipsis "..."))
+             ;; We need remove space in web page title.
+             (when (sort-tab-is-eaf-browser-buffer-p buf)
+               (setq bufname (replace-regexp-in-string "\\s-" "" bufname)))
+
              (if (> (length bufname) sort-tab-name-max-length)
                  (format "%s%s" (substring bufname 0 (- sort-tab-name-max-length (length ellipsis))) ellipsis)
                bufname)))
