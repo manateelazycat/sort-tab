@@ -1,4 +1,4 @@
-;;; sort-tab.el --- Provide an out of box configuration to use tab in Emacs.   -*- lexical-binding: t; -*-
+;;; sort-tab.el --- Smarter tab solution for Emacs, it sort tab with using frequency.   -*- lexical-binding: t; -*-
 
 ;; Filename: sort-tab.el
 ;; Description: Provide an out of box configuration to use sort-tab in Emacs.
@@ -11,7 +11,7 @@
 ;;           By: Andy Stewart
 ;; URL: http://www.emacswiki.org/emacs/download/sort-tab.el
 ;; Keywords:
-;; Compatibility: GNU Emacs 27.0.50
+;; Compatibility: GNU Emacs 29.0.50
 ;;
 ;; Features that might be required by this library:
 ;;
@@ -38,7 +38,7 @@
 
 ;;; Commentary:
 ;;
-;; Provide an out of box configuration to use tab in Emacs.
+;; Smarter tab solution for Emacs, it sort tab with using frequency.
 ;;
 
 ;;; Installation:
@@ -294,9 +294,12 @@ Returns non-nil if the new state is enabled.
 
           (dolist (buf sort-tab-visible-buffers)
             ;; Insert tab.
-            (setq tab (if (eq buf current-buffer)
-                          (propertize (format " %s " (buffer-name buf)) 'face 'sort-tab-current-tab-face)
-                        (propertize (format " %s " (buffer-name buf)) 'face 'sort-tab-other-tab-face)))
+            (setq tab (propertize
+                       (format " %s " (buffer-name buf))
+                       'face
+                       (if (eq buf current-buffer)
+                           'sort-tab-current-tab-face
+                         'sort-tab-other-tab-face)))
             (setq tab-separator (propertize "|"  'face 'sort-tab-separator-face))
             (insert tab)
             (insert tab-separator)
@@ -327,27 +330,30 @@ Returns non-nil if the new state is enabled.
     (setq bufs (sort bufs #'sort-tab-buffer-freq-higher-p))
     bufs))
 
+(defun sort-tab-get-index ()
+  (cl-position (current-buffer) sort-tab-visible-buffers :test #'eq))
+
 (defun sort-tab-select-prev-tab ()
   (interactive)
   (let* ((sort-tab-inhibit-resort t)
-         (buf (current-buffer))
-         (index (cl-position buf sort-tab-visible-buffers :test #'eq)))
-    (cond
-     ((or (null index) (eq index 0))
-      (switch-to-buffer (car (last sort-tab-visible-buffers))))
-     (t
-      (switch-to-buffer (nth (1- index) sort-tab-visible-buffers))))))
+         (index (sort-tab-get-index)))
+    (switch-to-buffer
+     (cond
+      ((or (null index) (eq index 0))
+       (car (last sort-tab-visible-buffers)))
+      (t
+       (nth (1- index) sort-tab-visible-buffers))))))
 
 (defun sort-tab-select-next-tab ()
   (interactive)
   (let* ((sort-tab-inhibit-resort t)
-         (buf (current-buffer))
-         (index (cl-position buf sort-tab-visible-buffers :test #'eq)))
-    (cond
-     ((or (null index) (eq index (1- (length sort-tab-visible-buffers))))
-      (switch-to-buffer (car sort-tab-visible-buffers)))
-     (t
-      (switch-to-buffer (nth (1+ index) sort-tab-visible-buffers))))))
+         (index (sort-tab-get-index)))
+    (switch-to-buffer
+     (cond
+      ((or (null index) (eq index (1- (length sort-tab-visible-buffers))))
+       (car sort-tab-visible-buffers))
+      (t
+       (nth (1+ index) sort-tab-visible-buffers))))))
 
 (defun sort-tab-select-first-tab ()
   (interactive)
