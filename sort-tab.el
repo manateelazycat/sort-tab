@@ -68,6 +68,11 @@
   "The height of sort-tab."
   :type 'integer)
 
+(defcustom sort-tab-name-max-length 30
+  "Max length of tab name."
+  :group 'awesome-tab
+  :type 'int)
+
 (defface sort-tab-current-tab-face
   '((((background light))
      :background "#d5c9c0" :foreground "#282828"
@@ -295,7 +300,12 @@ Returns non-nil if the new state is enabled.
           (dolist (buf sort-tab-visible-buffers)
             ;; Insert tab.
             (setq tab (propertize
-                       (format " %s " (buffer-name buf))
+                       (format " %s "
+                               (let ((bufname (buffer-name buf))
+                                     (ellipsis "..."))
+                                 (if (> (length bufname) sort-tab-name-max-length)
+                                     (format "%s%s" (substring bufname 0 (- sort-tab-name-max-length (length ellipsis))) ellipsis)
+                                   bufname)))
                        'face
                        (if (eq buf current-buffer)
                            'sort-tab-current-tab-face
@@ -315,7 +325,7 @@ Returns non-nil if the new state is enabled.
           (when tab-window
             (with-selected-window tab-window
               (cond ((> current-tab-end-column (+ (window-hscroll) (window-width)))
-                     (scroll-left (- current-tab-end-column (window-hscroll) (window-width))))
+                     (scroll-left (+ (- current-tab-end-column (window-hscroll) (window-width)) (/ (window-width) 2))))
                     ((< current-tab-start-column (window-hscroll))
                      (set-window-hscroll tab-window current-tab-start-column))
                     )))
