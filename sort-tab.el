@@ -187,14 +187,6 @@ Returns non-nil if the new state is enabled.
 
 (defun sort-tab-turn-off ()
   (interactive)
-  ;; Kill sort-tab buffer.
-  (when (sort-tab-live-p)
-    (kill-buffer sort-tab-buffer-name))
-
-  ;; Quit.
-  (sort-tab-quit))
-
-(defun sort-tab-quit ()
   (setq sort-tab-mode nil)
 
   (when (sort-tab-live-p)
@@ -405,10 +397,9 @@ Returns non-nil if the new state is enabled.
     (switch-to-buffer prev-buffer)))
 
 (defun sort-tab-kill-buffer-advisor (orig-fun &optional arg &rest args)
-  (when (equal (buffer-name) sort-tab-buffer-name)
-    (sort-tab-quit)
-    (message "sort-tab quit."))
-  (apply orig-fun arg args))
+  (if (equal (buffer-name) sort-tab-buffer-name)
+      (message "sort-tab buffer can't be kill, please use `sort-tab-turn-off' command to quit sort-tab.")
+    (apply orig-fun arg args)))
 (advice-add #'kill-buffer :around #'sort-tab-kill-buffer-advisor)
 
 (provide 'sort-tab)
