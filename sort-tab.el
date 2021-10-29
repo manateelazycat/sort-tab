@@ -396,6 +396,18 @@ Returns non-nil if the new state is enabled.
     (kill-buffer buf)
     (switch-to-buffer prev-buffer)))
 
+(defun sort-tab-select-visible-nth-tab (tab-index)
+  (let* ((sort-tab-inhibit-resort t))
+    (switch-to-buffer (nth (1- tab-index) sort-tab-visible-buffers))))
+
+(defun sort-tab-select-visible-tab ()
+  (interactive)
+  (let* ((event last-command-event)
+        (key (make-vector 1 event))
+        (key-desc (key-description key)))
+    (sort-tab-select-visible-nth-tab
+     (string-to-number (car (last (split-string key-desc "-")))))))
+
 (defun sort-tab-kill-buffer-advisor (orig-fun &optional arg &rest args)
   (if (equal (buffer-name) sort-tab-buffer-name)
       (message "sort-tab buffer can't be kill, please use `sort-tab-turn-off' command to quit sort-tab.")
