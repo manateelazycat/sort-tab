@@ -385,16 +385,16 @@ Returns non-nil if the new state is enabled.
   (let* ((sort-tab-inhibit-resort t)
          (buf (current-buffer))
          (index (cl-position buf sort-tab-visible-buffers :test #'eq))
-         (prev-buffer (cond
-                       ((or (null index) (eq index 0))
-                        (car (last sort-tab-visible-buffers)))
+         (next-buffer (cond
+                       ((or (null index) (eq index (1- (length sort-tab-visible-buffers))))
+                        (car sort-tab-visible-buffers))
                        (t
-                        (nth (1- index) sort-tab-visible-buffers)))))
+                        (nth (1+ index) sort-tab-visible-buffers)))))
     ;; Update `sort-tab-visible-buffers' first.
     (setq sort-tab-visible-buffers (delete buf sort-tab-visible-buffers))
     ;; Then kill current buffer and switch to previous buffer.
     (kill-buffer buf)
-    (switch-to-buffer prev-buffer)))
+    (switch-to-buffer next-buffer)))
 
 (defun sort-tab-select-visible-nth-tab (tab-index)
   (let* ((sort-tab-inhibit-resort t))
@@ -403,8 +403,8 @@ Returns non-nil if the new state is enabled.
 (defun sort-tab-select-visible-tab ()
   (interactive)
   (let* ((event last-command-event)
-        (key (make-vector 1 event))
-        (key-desc (key-description key)))
+         (key (make-vector 1 event))
+         (key-desc (key-description key)))
     (sort-tab-select-visible-nth-tab
      (string-to-number (car (last (split-string key-desc "-")))))))
 
