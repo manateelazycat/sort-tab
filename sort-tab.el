@@ -257,7 +257,7 @@ Returns non-nil if the new state is enabled.
 (defun sort-tab-buffer-need-hide-p (buf)
   (let* ((name (buffer-name buf)))
     (or
-     (cl-some (lambda (prefix) (string-prefix-p prefix name)) '("*Backtrace" "*scratch" "*Faces" "*Messages" "*Customize"))
+     (cl-some (lambda (prefix) (string-prefix-p prefix name)) '("*Backtrace" "*scratch" "*Faces" "*Messages" "*Customize" "*Flycheck" ))
      (eq (aref name 0) ?\s)             ;not hidden buffer
      (string-prefix-p " *" name)        ;not start with ` *'
      (string-prefix-p "*" name)         ;not start with `*'
