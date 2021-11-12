@@ -348,53 +348,66 @@ Returns non-nil if the new state is enabled.
 (defun sort-tab-get-index ()
   (cl-position (current-buffer) sort-tab-visible-buffers :test #'eq))
 
+(defun sort-tab-get-next-buffer ()
+  (let ((index (sort-tab-get-index)))
+    (cond
+     ((or (null index) (eq index (1- (length sort-tab-visible-buffers))))
+      (car sort-tab-visible-buffers))
+     (t
+      (nth (1+ index) sort-tab-visible-buffers)))))
+
+(defun sort-tab-get-prev-buffer ()
+  (let ((index (sort-tab-get-index)))
+    (cond
+     ((or (null index) (eq index 0))
+      (car (last sort-tab-visible-buffers)))
+     (t
+      (nth (1- index) sort-tab-visible-buffers)))))
+
+(defun sort-tab-get-first-buffer ()
+  (first sort-tab-visible-buffers))
+
+(defun sort-tab-get-last-buffer ()
+  (car (last sort-tab-visible-buffers)))
+
 (defun sort-tab-select-prev-tab ()
   (interactive)
-  (let* ((sort-tab-inhibit-resort t)
-         (index (sort-tab-get-index)))
-    (switch-to-buffer
-     (cond
-      ((or (null index) (eq index 0))
-       (car (last sort-tab-visible-buffers)))
-      (t
-       (nth (1- index) sort-tab-visible-buffers))))))
+  (let* ((sort-tab-inhibit-resort t))
+    (switch-to-buffer (sort-tab-get-prev-buffer))))
 
 (defun sort-tab-select-next-tab ()
   (interactive)
-  (let* ((sort-tab-inhibit-resort t)
-         (index (sort-tab-get-index)))
-    (switch-to-buffer
-     (cond
-      ((or (null index) (eq index (1- (length sort-tab-visible-buffers))))
-       (car sort-tab-visible-buffers))
-      (t
-       (nth (1+ index) sort-tab-visible-buffers))))))
+  (let* ((sort-tab-inhibit-resort t))
+    (switch-to-buffer (sort-tab-get-next-buffer))))
 
 (defun sort-tab-select-first-tab ()
   (interactive)
   (let* ((sort-tab-inhibit-resort t))
-    (switch-to-buffer (first sort-tab-visible-buffers))))
+    (switch-to-buffer (sort-tab-get-first-buffer))))
 
 (defun sort-tab-select-last-tab ()
   (interactive)
   (let* ((sort-tab-inhibit-resort t))
-    (switch-to-buffer (car (last sort-tab-visible-buffers)))))
+    (switch-to-buffer (sort-tab-get-last-buffer))))
 
 (defun sort-tab-close-current-tab ()
   (interactive)
   (let* ((sort-tab-inhibit-resort t)
          (buf (current-buffer))
-         (index (cl-position buf sort-tab-visible-buffers :test #'eq))
-         (next-buffer (cond
-                       ((or (null index) (eq index (1- (length sort-tab-visible-buffers))))
-                        (car sort-tab-visible-buffers))
-                       (t
-                        (nth (1+ index) sort-tab-visible-buffers)))))
+         (prev-buffer (sort-tab-get-prev-buffer))
+         (next-buffer (sort-tab-get-next-buffer))
+         (last-buffer (sort-tab-get-last-buffer))
+         (is-last-buffer (eq buf last-buffer)))
     ;; Update `sort-tab-visible-buffers' first.
     (setq sort-tab-visible-buffers (delete buf sort-tab-visible-buffers))
-    ;; Then kill current buffer and switch to previous buffer.
+    ;; Then kill current buffer.
     (kill-buffer buf)
-    (switch-to-buffer next-buffer)))
+    ;; Switch to previous buffer if current buffer is last buffer,
+    ;; otherwise switch to next buffer.
+    (if is-last-buffer
+        (switch-to-buffer prev-buffer)
+      (switch-to-buffer next-buffer)
+      )))
 
 (defun sort-tab-select-visible-nth-tab (tab-index)
   (let* ((sort-tab-inhibit-resort t))
