@@ -405,8 +405,10 @@ Returns non-nil if the new state is enabled.
     ;; Switch to previous buffer if current buffer is last buffer,
     ;; otherwise switch to next buffer.
     (if is-last-buffer
-        (switch-to-buffer prev-buffer)
-      (switch-to-buffer next-buffer)
+        (when (buffer-live-p prev-buffer)
+          (switch-to-buffer prev-buffer))
+      (when (buffer-live-p next-buffer)
+        (switch-to-buffer next-buffer))
       )))
 
 (defun sort-tab-select-visible-nth-tab (tab-index)
