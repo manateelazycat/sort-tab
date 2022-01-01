@@ -162,7 +162,7 @@ Returns non-nil if the new state is enabled.
   (sort-tab-update-list)
 
   ;; Add update hook.
-  (add-hook 'buffer-list-update-hook #'sort-tab-update-list))
+  (add-hook 'post-command-hook #'sort-tab-update-list))
 
 (defun sort-tab-create-window ()
   ;; Split top window.
@@ -206,7 +206,7 @@ Returns non-nil if the new state is enabled.
   (sort-tab-stop-count-freq)
 
   ;; Remove update hook.
-  (remove-hook 'buffer-list-update-hook #'sort-tab-update-list))
+  (remove-hook 'post-command-hook #'sort-tab-update-list))
 
 (defun sort-tab-live-p ()
   (and (buffer-live-p (get-buffer sort-tab-buffer-name))
@@ -272,14 +272,19 @@ Returns non-nil if the new state is enabled.
 (defun sort-tab-need-update-p (current-buffer)
   (and
    (not (window-minibuffer-p))
+   (not (eq current-buffer sort-tab-last-active-buffer))
    (not (sort-tab-buffer-need-hide-p current-buffer))
-   (not (eq current-buffer sort-tab-last-active-buffer))))
+   ))
 
 (defun sort-tab-update-list ()
   (let ((current-buffer (current-buffer)))
     (when (sort-tab-need-update-p current-buffer)
       ;; Debug usage.
-      ;; (message "**** %s %s" last-command (buffer-name current-buffer))
+      ;; (with-current-buffer (get-buffer-create "sort-tab-debug")
+      ;;   (goto-char (point-max))
+      ;;   (insert (format "**** %s %s\n"
+      ;;                   last-command
+      ;;                   (buffer-name current-buffer))))
 
       (let* ((current-tab-start-column 0)
              (current-tab-end-column 0)
