@@ -111,8 +111,6 @@
 
 (defvar sort-tab-visible-buffers nil)
 
-(defvar sort-tab-inhibit-resort nil)
-
 (defvar sort-tab-last-active-buffer nil)
 
 (define-minor-mode sort-tab-mode
@@ -297,7 +295,7 @@ Returns non-nil if the new state is enabled.
           (erase-buffer)
 
           ;; Don't sort tabs if using sort-tab commands.
-          (unless sort-tab-inhibit-resort
+          (when (not (string-prefix-p "sort-tab-" (prin1-to-string last-command)))
             (setq sort-tab-visible-buffers (sort-tab-get-buffer-list)))
 
           (dolist (buf sort-tab-visible-buffers)
@@ -377,28 +375,23 @@ Returns non-nil if the new state is enabled.
 
 (defun sort-tab-select-prev-tab ()
   (interactive)
-  (let* ((sort-tab-inhibit-resort t))
-    (switch-to-buffer (sort-tab-get-prev-buffer))))
+  (switch-to-buffer (sort-tab-get-prev-buffer)))
 
 (defun sort-tab-select-next-tab ()
   (interactive)
-  (let* ((sort-tab-inhibit-resort t))
-    (switch-to-buffer (sort-tab-get-next-buffer))))
+  (switch-to-buffer (sort-tab-get-next-buffer)))
 
 (defun sort-tab-select-first-tab ()
   (interactive)
-  (let* ((sort-tab-inhibit-resort t))
-    (switch-to-buffer (sort-tab-get-first-buffer))))
+  (switch-to-buffer (sort-tab-get-first-buffer)))
 
 (defun sort-tab-select-last-tab ()
   (interactive)
-  (let* ((sort-tab-inhibit-resort t))
-    (switch-to-buffer (sort-tab-get-last-buffer))))
+  (switch-to-buffer (sort-tab-get-last-buffer)))
 
 (defun sort-tab-close-current-tab ()
   (interactive)
-  (let* ((sort-tab-inhibit-resort t)
-         (buf (current-buffer))
+  (let* ((buf (current-buffer))
          (prev-buffer (sort-tab-get-prev-buffer))
          (next-buffer (sort-tab-get-next-buffer))
          (last-buffer (sort-tab-get-last-buffer))
@@ -417,8 +410,7 @@ Returns non-nil if the new state is enabled.
       )))
 
 (defun sort-tab-select-visible-nth-tab (tab-index)
-  (let* ((sort-tab-inhibit-resort t))
-    (switch-to-buffer (nth (1- tab-index) sort-tab-visible-buffers))))
+  (switch-to-buffer (nth (1- tab-index) sort-tab-visible-buffers)))
 
 (defun sort-tab-select-visible-tab ()
   (interactive)
