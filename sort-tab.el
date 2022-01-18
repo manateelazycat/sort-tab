@@ -72,10 +72,6 @@
   "Max length of tab name."
   :type 'int)
 
-(defcustom sort-tab-sort-idle 10
-  "The idle seconds to sort tab."
-  :type 'integer)
-
 (defface sort-tab-current-tab-face
   '((((background light))
      :background "#d5c9c0" :foreground "#282828" :bold t)
@@ -115,9 +111,9 @@
 
 (defvar sort-tab-visible-buffers nil)
 
-(defvar sort-tab-last-active-buffer nil)
+(defvar sort-tab-inhibit-resort nil)
 
-(defvar sort-tab-sort-timer nil)
+(defvar sort-tab-last-active-buffer nil)
 
 (define-minor-mode sort-tab-mode
   "Toggle display of a sort-tab.
@@ -135,44 +131,6 @@ Returns non-nil if the new state is enabled.
 
 (defun sort-tab-get-buffer ()
   (get-buffer-create sort-tab-buffer-name))
-
-(defun sort-tab-sort-buffers ()
-  "Just sort buffers when you finger idle.
-
-Default idle is 10 seconds, you can customize option `sort-tab-sort-idle' to change idle duration."
-  (setq sort-tab-visible-buffers (sort-tab-get-buffer-list))
-  (sort-tab-update-list))
-
-(defun sort-tab-set-sort-timer ()
-  (sort-tab-cancel-sort-timer)
-  (setq sort-tab-sort-timer
-        (run-with-idle-timer sort-tab-sort-idle t 'sort-tab-sort-buffers)))
-
-(defun sort-tab-cancel-sort-timer ()
-  (when sort-tab-sort-timer
-    (cancel-timer sort-tab-sort-timer)
-    (setq sort-tab-sort-timer nil)))
-
-(defun sort-tab-create-window ()
-  ;; Split top window.
-  (ignore-errors
-    (dotimes (i 50)
-      (windmove-up)))
-  (split-window-vertically 1)
-
-  ;; Record sort-tab window.
-  (setq sort-tab-window (selected-window))
-  (switch-to-buffer (sort-tab-get-buffer))
-  (other-window 1)
-
-  ;; Set window dedicated to make sure pop buffer won't use sort-tab window.
-  (set-window-dedicated-p sort-tab-window t)
-
-  ;; Make sure sort-tab window can skip `delete-other-windows' and 'other-window'.
-  (set-window-parameter sort-tab-window 'no-delete-other-windows t)
-  (set-window-parameter sort-tab-window 'window-side 'top)
-  (set-window-parameter sort-tab-window 'window-slot 0)
-  (set-window-parameter sort-tab-window 'no-other-window t))
 
 (defun sort-tab-turn-on ()
   (interactive)
@@ -204,10 +162,28 @@ Default idle is 10 seconds, you can customize option `sort-tab-sort-idle' to cha
   (sort-tab-update-list)
 
   ;; Add update hook.
-  (add-hook 'post-command-hook #'sort-tab-update-list)
+  (add-hook 'post-command-hook #'sort-tab-update-list))
 
-  ;; Enable sort timer.
-  (sort-tab-set-sort-timer))
+(defun sort-tab-create-window ()
+  ;; Split top window.
+  (ignore-errors
+    (dotimes (i 50)
+      (windmove-up)))
+  (split-window-vertically 1)
+
+  ;; Record sort-tab window.
+  (setq sort-tab-window (selected-window))
+  (switch-to-buffer (sort-tab-get-buffer))
+  (other-window 1)
+
+  ;; Set window dedicated to make sure pop buffer won't use sort-tab window.
+  (set-window-dedicated-p sort-tab-window t)
+
+  ;; Make sure sort-tab window can skip `delete-other-windows' and 'other-window'.
+  (set-window-parameter sort-tab-window 'no-delete-other-windows t)
+  (set-window-parameter sort-tab-window 'window-side 'top)
+  (set-window-parameter sort-tab-window 'window-slot 0)
+  (set-window-parameter sort-tab-window 'no-other-window t))
 
 (defun sort-tab-turn-off ()
   (interactive)
@@ -230,10 +206,7 @@ Default idle is 10 seconds, you can customize option `sort-tab-sort-idle' to cha
   (sort-tab-stop-count-freq)
 
   ;; Remove update hook.
-  (remove-hook 'post-command-hook #'sort-tab-update-list)
-
-  ;; Disable sort timer.
-  (sort-tab-cancel-sort-timer))
+  (remove-hook 'post-command-hook #'sort-tab-update-list))
 
 (defun sort-tab-live-p ()
   (and (buffer-live-p (get-buffer sort-tab-buffer-name))
@@ -323,6 +296,10 @@ Default idle is 10 seconds, you can customize option `sort-tab-sort-idle' to cha
           ;; Clean buffer.
           (erase-buffer)
 
+          ;; Don't sort tabs if using sort-tab commands.
+          (unless sort-tab-inhibit-resort
+            (setq sort-tab-visible-buffers (sort-tab-get-buffer-list)))
+
           (dolist (buf sort-tab-visible-buffers)
             ;; Insert tab.
             (setq tab (sort-tab-get-tab-name buf current-buffer))
@@ -400,23 +377,28 @@ Default idle is 10 seconds, you can customize option `sort-tab-sort-idle' to cha
 
 (defun sort-tab-select-prev-tab ()
   (interactive)
-  (switch-to-buffer (sort-tab-get-prev-buffer)))
+  (let* ((sort-tab-inhibit-resort t))
+    (switch-to-buffer (sort-tab-get-prev-buffer))))
 
 (defun sort-tab-select-next-tab ()
   (interactive)
-  (switch-to-buffer (sort-tab-get-next-buffer)))
+  (let* ((sort-tab-inhibit-resort t))
+    (switch-to-buffer (sort-tab-get-next-buffer))))
 
 (defun sort-tab-select-first-tab ()
   (interactive)
-  (switch-to-buffer (sort-tab-get-first-buffer)))
+  (let* ((sort-tab-inhibit-resort t))
+    (switch-to-buffer (sort-tab-get-first-buffer))))
 
 (defun sort-tab-select-last-tab ()
   (interactive)
-  (switch-to-buffer (sort-tab-get-last-buffer)))
+  (let* ((sort-tab-inhibit-resort t))
+    (switch-to-buffer (sort-tab-get-last-buffer))))
 
 (defun sort-tab-close-current-tab ()
   (interactive)
-  (let* ((buf (current-buffer))
+  (let* ((sort-tab-inhibit-resort t)
+         (buf (current-buffer))
          (prev-buffer (sort-tab-get-prev-buffer))
          (next-buffer (sort-tab-get-next-buffer))
          (last-buffer (sort-tab-get-last-buffer))
@@ -435,7 +417,8 @@ Default idle is 10 seconds, you can customize option `sort-tab-sort-idle' to cha
       )))
 
 (defun sort-tab-select-visible-nth-tab (tab-index)
-  (switch-to-buffer (nth (1- tab-index) sort-tab-visible-buffers)))
+  (let* ((sort-tab-inhibit-resort t))
+    (switch-to-buffer (nth (1- tab-index) sort-tab-visible-buffers))))
 
 (defun sort-tab-select-visible-tab ()
   (interactive)
