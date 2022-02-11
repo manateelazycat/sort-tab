@@ -254,6 +254,15 @@ Returns non-nil if the new state is enabled.
          (> (sort-tab-buffer-freq buf1)
             (sort-tab-buffer-freq buf2)))))
 
+(defun sort-tab-is-magit-buffer-p (buf)
+  (with-current-buffer buf              ;not magit buffer
+    (or (derived-mode-p 'magit-status-mode)
+        (derived-mode-p 'magit-process-mode)
+        (derived-mode-p 'magit-diff-mode)
+        (derived-mode-p 'magit-log-mode)
+        (derived-mode-p 'magit-status-mode)
+        )))
+
 (defun sort-tab-buffer-need-hide-p (buf)
   (let* ((name (buffer-name buf)))
     (or
@@ -261,24 +270,31 @@ Returns non-nil if the new state is enabled.
      (eq (aref name 0) ?\s)             ;not hidden buffer
      (string-prefix-p " *" name)        ;not start with ` *'
      (string-prefix-p "*" name)         ;not start with `*'
-     (with-current-buffer buf           ;not magit buffer
-       (or (derived-mode-p 'magit-status-mode)
-           (derived-mode-p 'magit-process-mode)
-           (derived-mode-p 'magit-diff-mode)
-           (derived-mode-p 'magit-log-mode)
-           (derived-mode-p 'magit-status-mode)
-           )))))
+     (sort-tab-is-magit-buffer-p buf)   ;not magit buffer
+     )))
 
-(defun sort-tab-need-update-p (current-buffer)
+(defun sort-tab-is-normal-buffer-p (current-buffer)
   (and
    (not (window-minibuffer-p))
    (not (eq current-buffer sort-tab-last-active-buffer))
    (not (sort-tab-buffer-need-hide-p current-buffer))
    ))
 
+(defun sort-tab-is-hide-buffer-p (current-buffer)
+  (and
+   (sort-tab-buffer-need-hide-p current-buffer)
+   (not (window-minibuffer-p))
+   (not (string-prefix-p " *eldoc" (buffer-name current-buffer)))
+   (not (string-prefix-p " *snails" (buffer-name current-buffer)))
+   (not (string-equal sort-tab-buffer-name (buffer-name current-buffer)))
+   (not (sort-tab-is-magit-buffer-p current-buffer)) ;not magit buffer
+   ))
+
 (defun sort-tab-update-list ()
   (let ((current-buffer (current-buffer)))
-    (when (sort-tab-need-update-p current-buffer)
+    (cond
+     ;; Display tabs if current-buffer is normal buffer.
+     ((sort-tab-is-normal-buffer-p current-buffer)
       ;; Debug usage.
       ;; (with-current-buffer (get-buffer-create "sort-tab-debug")
       ;;   (goto-char (point-max))
@@ -325,7 +341,28 @@ Returns non-nil if the new state is enabled.
 
           ;; Record last active buffer.
           (setq sort-tab-last-active-buffer current-buffer)
-          )))))
+          )))
+     ;; Only display hide buffer at top if current buffer is match hide rule.
+     ((sort-tab-is-hide-buffer-p current-buffer)
+      (with-current-buffer (sort-tab-get-buffer)
+        ;; Clean buffer.
+        (erase-buffer)
+
+        ;; Insert current buffer.
+        (insert (sort-tab-get-tab-name current-buffer current-buffer))
+
+        ;; Record last active buffer.
+        (setq sort-tab-last-active-buffer current-buffer)
+        ))
+     ;; Erase sort-tab content if current buffer is sort-tab buffer.
+     ((string-equal sort-tab-buffer-name (buffer-name current-buffer))
+      (with-current-buffer (sort-tab-get-buffer)
+        ;; Clean buffer.
+        (erase-buffer)
+
+        ;; Record last active buffer.
+        (setq sort-tab-last-active-buffer current-buffer)
+        )))))
 
 (defun sort-tab-get-tab-name (buf current-buffer)
   (propertize
