@@ -286,6 +286,8 @@ Returns non-nil if the new state is enabled.
    (not (window-minibuffer-p))
    (not (string-prefix-p " *eldoc" (buffer-name current-buffer)))
    (not (string-prefix-p " *snails" (buffer-name current-buffer)))
+   (not (string-prefix-p "*Help" (buffer-name current-buffer)))
+   (not (string-prefix-p "*Flycheck" (buffer-name current-buffer)))
    (not (string-equal sort-tab-buffer-name (buffer-name current-buffer)))
    (not (sort-tab-is-magit-buffer-p current-buffer)) ;not magit buffer
    ))
