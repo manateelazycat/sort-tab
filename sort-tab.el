@@ -266,11 +266,9 @@ Returns non-nil if the new state is enabled.
 (defun sort-tab-buffer-need-hide-p (buf)
   (let* ((name (buffer-name buf)))
     (or
-     (cl-some (lambda (prefix) (string-prefix-p prefix name)) '("*Backtrace" "*scratch" "*Faces" "*Messages" "*Customize" "*Flycheck" ))
-     (eq (aref name 0) ?\s)             ;not hidden buffer
-     (string-prefix-p " *" name)        ;not start with ` *'
-     (string-prefix-p "*" name)         ;not start with `*'
-     (sort-tab-is-magit-buffer-p buf)   ;not magit buffer
+     (cl-some (lambda (prefix) (string-prefix-p prefix name)) '("*" " *" "COMMIT_EDITMSG"))
+     (eq (aref name 0) ?\s)
+     (sort-tab-is-magit-buffer-p buf)
      )))
 
 (defun sort-tab-is-normal-buffer-p (current-buffer)
@@ -280,17 +278,27 @@ Returns non-nil if the new state is enabled.
    (not (sort-tab-buffer-need-hide-p current-buffer))
    ))
 
-(defun sort-tab-is-hide-buffer-p (current-buffer)
-  (and
-   (sort-tab-buffer-need-hide-p current-buffer)
-   (not (window-minibuffer-p))
-   (not (string-prefix-p " *eldoc" (buffer-name current-buffer)))
-   (not (string-prefix-p " *snails" (buffer-name current-buffer)))
-   (not (string-prefix-p "*Help" (buffer-name current-buffer)))
-   (not (string-prefix-p "*Flycheck" (buffer-name current-buffer)))
-   (not (string-equal sort-tab-buffer-name (buffer-name current-buffer)))
-   (not (sort-tab-is-magit-buffer-p current-buffer)) ;not magit buffer
-   ))
+(defun sort-tab-is-hidden-buffer-p (buf)
+  (let* ((name (buffer-name buf)))
+    (and
+     (sort-tab-buffer-need-hide-p buf)
+     (not (window-minibuffer-p))
+     (not (cl-some (lambda (prefix) (string-prefix-p prefix name)) '(" *eldoc" " *snails" "*Help" "*Flycheck" "COMMIT_EDITMSG")))
+     (not (string-equal sort-tab-buffer-name name))
+     (not (sort-tab-is-magit-buffer-p buf))
+     )))
+
+(cl-defmacro sort-tab-update-tabs (&rest body)
+  `(with-current-buffer (sort-tab-get-buffer)
+     ;; Clean buffer.
+     (erase-buffer)
+
+     ;; Update tabs.
+     ,@body
+
+     ;; Record last active buffer.
+     (setq sort-tab-last-active-buffer current-buffer)
+     ))
 
 (defun sort-tab-update-list ()
   (let ((current-buffer (window-buffer)))
@@ -310,61 +318,41 @@ Returns non-nil if the new state is enabled.
              found-current-tab
              tab-separator
              tab)
-        (with-current-buffer (sort-tab-get-buffer)
-          ;; Clean buffer.
-          (erase-buffer)
+        (sort-tab-update-tabs
+         ;; Don't sort tabs if using sort-tab commands.
+         (when (not (string-prefix-p "sort-tab-" (prin1-to-string last-command)))
+           (setq sort-tab-visible-buffers (sort-tab-get-buffer-list)))
 
-          ;; Don't sort tabs if using sort-tab commands.
-          (when (not (string-prefix-p "sort-tab-" (prin1-to-string last-command)))
-            (setq sort-tab-visible-buffers (sort-tab-get-buffer-list)))
+         (dolist (buf sort-tab-visible-buffers)
+           ;; Insert tab.
+           (setq tab (sort-tab-get-tab-name buf current-buffer))
+           (setq tab-separator (propertize "|"  'face 'sort-tab-separator-face))
+           (insert tab)
+           (insert tab-separator)
 
-          (dolist (buf sort-tab-visible-buffers)
-            ;; Insert tab.
-            (setq tab (sort-tab-get-tab-name buf current-buffer))
-            (setq tab-separator (propertize "|"  'face 'sort-tab-separator-face))
-            (insert tab)
-            (insert tab-separator)
+           ;; Calculate the current tab column.
+           (unless found-current-tab
+             (when (eq buf current-buffer)
+               (setq found-current-tab t)
+               (setq current-tab-start-column current-tab-end-column))
+             (setq current-tab-end-column (+ current-tab-end-column (length tab) (length tab-separator)))))
 
-            ;; Calculate the current tab column.
-            (unless found-current-tab
-              (when (eq buf current-buffer)
-                (setq found-current-tab t)
-                (setq current-tab-start-column current-tab-end-column))
-              (setq current-tab-end-column (+ current-tab-end-column (length tab) (length tab-separator)))))
-
-          ;; Make tab always visible.
-          (when tab-window
-            (with-selected-window tab-window
-              (cond ((> current-tab-end-column (+ (window-hscroll) (window-width)))
-                     (scroll-left (+ (- current-tab-end-column (window-hscroll) (window-width)) (/ (window-width) 2))))
-                    ((< current-tab-start-column (window-hscroll))
-                     (set-window-hscroll tab-window current-tab-start-column))
-                    )))
-
-          ;; Record last active buffer.
-          (setq sort-tab-last-active-buffer current-buffer)
-          )))
+         ;; Make tab always visible.
+         (when tab-window
+           (with-selected-window tab-window
+             (cond ((> current-tab-end-column (+ (window-hscroll) (window-width)))
+                    (scroll-left (+ (- current-tab-end-column (window-hscroll) (window-width)) (/ (window-width) 2))))
+                   ((< current-tab-start-column (window-hscroll))
+                    (set-window-hscroll tab-window current-tab-start-column))
+                   ))))))
      ;; Only display hide buffer at top if current buffer is match hide rule.
-     ((sort-tab-is-hide-buffer-p current-buffer)
-      (with-current-buffer (sort-tab-get-buffer)
-        ;; Clean buffer.
-        (erase-buffer)
-
-        ;; Insert current buffer.
-        (insert (sort-tab-get-tab-name current-buffer current-buffer))
-
-        ;; Record last active buffer.
-        (setq sort-tab-last-active-buffer current-buffer)
-        ))
+     ((sort-tab-is-hidden-buffer-p current-buffer)
+      (sort-tab-update-tabs
+       ;; Insert current buffer.
+       (insert (sort-tab-get-tab-name current-buffer current-buffer))))
      ;; Erase sort-tab content if current buffer is sort-tab buffer.
      ((string-equal sort-tab-buffer-name (buffer-name current-buffer))
-      (with-current-buffer (sort-tab-get-buffer)
-        ;; Clean buffer.
-        (erase-buffer)
-
-        ;; Record last active buffer.
-        (setq sort-tab-last-active-buffer current-buffer)
-        )))))
+      (sort-tab-update-tabs)))))
 
 (defun sort-tab-get-tab-name (buf current-buffer)
   (propertize
