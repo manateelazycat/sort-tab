@@ -293,7 +293,7 @@ Returns non-nil if the new state is enabled.
    ))
 
 (defun sort-tab-update-list ()
-  (let ((current-buffer (current-buffer)))
+  (let ((current-buffer (window-buffer)))
     (cond
      ;; Display tabs if current-buffer is normal buffer.
      ((sort-tab-is-normal-buffer-p current-buffer)
@@ -390,7 +390,7 @@ Returns non-nil if the new state is enabled.
     bufs))
 
 (defun sort-tab-get-index ()
-  (cl-position (current-buffer) sort-tab-visible-buffers :test #'eq))
+  (cl-position (window-buffer) sort-tab-visible-buffers :test #'eq))
 
 (defun sort-tab-get-next-buffer ()
   (let ((index (sort-tab-get-index)))
@@ -432,7 +432,7 @@ Returns non-nil if the new state is enabled.
 
 (defun sort-tab-close-current-tab ()
   (interactive)
-  (let* ((buf (current-buffer))
+  (let* ((buf (window-buffer))
          (prev-buffer (sort-tab-get-prev-buffer))
          (next-buffer (sort-tab-get-next-buffer))
          (last-buffer (sort-tab-get-last-buffer))
