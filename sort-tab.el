@@ -283,7 +283,7 @@ Returns non-nil if the new state is enabled.
     (and
      (sort-tab-buffer-need-hide-p buf)
      (not (window-minibuffer-p))
-     (not (cl-some (lambda (prefix) (string-prefix-p prefix name)) '(" *eldoc" " *snails" "*Help" "*Flycheck" "COMMIT_EDITMSG")))
+     (not (cl-some (lambda (prefix) (string-prefix-p prefix name)) '(" *eldoc" " *snails" "*Help" "*Flycheck" "COMMIT_EDITMSG" " *rime")))
      (not (string-equal sort-tab-buffer-name name))
      (not (sort-tab-is-magit-buffer-p buf))
      )))
