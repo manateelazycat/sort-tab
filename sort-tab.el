@@ -397,7 +397,7 @@ Returns non-nil if the new state is enabled.
       (nth (1- index) sort-tab-visible-buffers)))))
 
 (defun sort-tab-get-first-buffer ()
-  (first sort-tab-visible-buffers))
+  (cl-first sort-tab-visible-buffers))
 
 (defun sort-tab-get-last-buffer ()
   (car (last sort-tab-visible-buffers)))
