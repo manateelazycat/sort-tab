@@ -281,11 +281,10 @@ Returns non-nil if the new state is enabled.
 (defun sort-tab-is-hidden-buffer-p (buf)
   (let* ((name (buffer-name buf)))
     (and
-     (sort-tab-buffer-need-hide-p buf)
+     (<= (length (cl-remove-if #'window-dedicated-p (window-list))) 1)
      (not (window-minibuffer-p))
-     (not (cl-some (lambda (prefix) (string-prefix-p prefix name)) '(" *eldoc" " *snails" "*Help" "*Flycheck" "COMMIT_EDITMSG" " *rime")))
      (not (string-equal sort-tab-buffer-name name))
-     (not (sort-tab-is-magit-buffer-p buf))
+     (not (cl-some (lambda (prefix) (string-prefix-p prefix name)) '(" *eldoc" "*Flycheck" " *rime")))
      )))
 
 (cl-defmacro sort-tab-update-tabs (&rest body)
