@@ -438,6 +438,13 @@ Returns non-nil if the new state is enabled.
         (switch-to-buffer next-buffer))
       )))
 
+(defun sort-tab-close-all-tabs ()
+  (interactive)
+  (let ((visible-buffers sort-tab-visible-buffers))
+    (setq sort-tab-visible-buffers nil)
+    (dolist (buf visible-buffers)
+      (kill-buffer buf))))
+
 (defun sort-tab-select-visible-nth-tab (tab-index)
   (switch-to-buffer (nth (1- tab-index) sort-tab-visible-buffers)))
 

@@ -27,16 +27,17 @@ sort-tab stay on top of Emacs, it won't waste any vertically space when you spli
 You can bind the number keys to the command ```sort-tab-select-visible-tab```, such as s-1, s-2, s-3 ... etc.
 
 ```
-(global-set-key (kbd "s-1") sort-tab-select-visible-tab)
-(global-set-key (kbd "s-2") sort-tab-select-visible-tab)
-(global-set-key (kbd "s-3") sort-tab-select-visible-tab)
-(global-set-key (kbd "s-4") sort-tab-select-visible-tab)
-(global-set-key (kbd "s-5") sort-tab-select-visible-tab)
-(global-set-key (kbd "s-6") sort-tab-select-visible-tab)
-(global-set-key (kbd "s-7") sort-tab-select-visible-tab)
-(global-set-key (kbd "s-8") sort-tab-select-visible-tab)
-(global-set-key (kbd "s-9") sort-tab-select-visible-tab)
-(global-set-key (kbd "s-0") sort-tab-select-visible-tab)
+(global-set-key (kbd "s-1") 'sort-tab-select-visible-tab)
+(global-set-key (kbd "s-2") 'sort-tab-select-visible-tab)
+(global-set-key (kbd "s-3") 'sort-tab-select-visible-tab)
+(global-set-key (kbd "s-4") 'sort-tab-select-visible-tab)
+(global-set-key (kbd "s-5") 'sort-tab-select-visible-tab)
+(global-set-key (kbd "s-6") 'sort-tab-select-visible-tab)
+(global-set-key (kbd "s-7") 'sort-tab-select-visible-tab)
+(global-set-key (kbd "s-8") 'sort-tab-select-visible-tab)
+(global-set-key (kbd "s-9") 'sort-tab-select-visible-tab)
+(global-set-key (kbd "s-0") 'sort-tab-select-visible-tab)
+(global-set-key (kbd "s-Q") 'sort-tab-close-all-tabs)
 ```
 
 This function automatically recognizes the number at the end of the keystroke
