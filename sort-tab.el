@@ -160,7 +160,6 @@ Returns non-nil if the new state is enabled.
   (sort-tab-update-list)
 
   ;; Add update hook.
-  (add-hook 'post-command-hook #'sort-tab-update-list)
   (add-hook 'buffer-list-update-hook #'sort-tab-update-list))
 
 (defun sort-tab-create-window ()
@@ -205,7 +204,6 @@ Returns non-nil if the new state is enabled.
   (sort-tab-stop-count-freq)
 
   ;; Remove update hook.
-  (remove-hook 'post-command-hook #'sort-tab-update-list)
   (remove-hook 'buffer-list-update-hook #'sort-tab-update-list))
 
 (defun sort-tab-live-p ()
@@ -297,7 +295,7 @@ Returns non-nil if the new state is enabled.
      ,@body
 
      ;; Record last active buffer.
-     (setq sort-tab-last-active-buffer current-buffer)
+     (setq sort-tab-last-active-buffer (current-buffer))
      ))
 
 (defun sort-tab-update-list ()
