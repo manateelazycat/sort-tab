@@ -72,6 +72,10 @@
   "Max length of tab name."
   :type 'int)
 
+(defcustom sort-tab-separator "|"
+  "The separator between tabs."
+  :type 'string)
+
 (defface sort-tab-current-tab-face
   '((((background light))
      :background "#d5c9c0" :foreground "#282828" :bold t)
@@ -324,7 +328,7 @@ Returns non-nil if the new state is enabled.
          (dolist (buf sort-tab-visible-buffers)
            ;; Insert tab.
            (setq tab (sort-tab-get-tab-name buf current-buffer))
-           (setq tab-separator (propertize "|"  'face 'sort-tab-separator-face))
+           (setq tab-separator (propertize sort-tab-separator 'face 'sort-tab-separator-face))
            (insert tab)
            (insert tab-separator)
 
