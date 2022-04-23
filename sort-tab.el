@@ -76,6 +76,10 @@
   "The separator between tabs."
   :type 'string)
 
+(defcustom sort-tab-sort-weights 5
+  "The sort weights, avoid frequent interchangements of two tabs with similar frequencies."
+  :type 'integer)
+
 (defface sort-tab-current-tab-face
   '((((background light))
      :background "#d5c9c0" :foreground "#282828" :bold t)
@@ -253,8 +257,8 @@ Returns non-nil if the new state is enabled.
               (not (sort-tab-is-eaf-browser-buffer-p buf1)))
          nil)
         (t
-         (> (sort-tab-buffer-freq buf1)
-            (sort-tab-buffer-freq buf2)))))
+         (> (/ (sort-tab-buffer-freq buf1) sort-tab-sort-weights)
+            (/ (sort-tab-buffer-freq buf2) sort-tab-sort-weights)))))
 
 (defun sort-tab-is-magit-buffer-p (buf)
   (with-current-buffer buf              ;not magit buffer
