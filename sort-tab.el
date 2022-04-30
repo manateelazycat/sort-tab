@@ -443,10 +443,8 @@ Returns non-nil if the new state is enabled.
          (next-buffer (sort-tab-get-next-buffer))
          (last-buffer (sort-tab-get-last-buffer))
          (is-last-buffer (eq buf last-buffer)))
-    ;; Update `sort-tab-visible-buffers' first.
-    (setq sort-tab-visible-buffers (delete buf sort-tab-visible-buffers))
     ;; Then kill current buffer.
-    (kill-buffer buf)
+    (sort-tab-kill-buffer buf)
     ;; Switch to previous buffer if current buffer is last buffer,
     ;; otherwise switch to next buffer.
     (if is-last-buffer
@@ -466,16 +464,24 @@ Returns non-nil if the new state is enabled.
 (defun sort-tab-close-mode-tabs ()
   (interactive)
   (let ((modes (sort-tab-get-buffer-modes))
+        (current-mode (sort-tab-get-current-buffer-mode))
         close-mode)
-    (setq close-mode (completing-read "Close buffers match mode: " modes))
+    (setq close-mode (completing-read (format "Close buffers match mode (%s): " current-mode) modes))
+    (when (string-equal close-mode "")
+      (setq close-mode current-mode))
     (dolist (buffer (buffer-list))
       (with-current-buffer buffer
         (when (or (and (string-prefix-p "eaf:" close-mode)
                        (eq major-mode 'eaf-mode)
                        (string-equal eaf--buffer-app-name (cadr (split-string close-mode ":"))))
-                  (eq major-mode close-mode))
-          (kill-buffer buffer)
+                  (string-equal (prin1-to-string major-mode) close-mode))
+          (sort-tab-kill-buffer buffer)
           )))))
+
+(defun sort-tab-kill-buffer (buffer)
+  ;; Update `sort-tab-visible-buffers' first.
+  (setq sort-tab-visible-buffers (delete buffer sort-tab-visible-buffers))
+  (kill-buffer buffer))
 
 (defun sort-tab-get-buffer-modes ()
   (let ((mode-table (make-hash-table :test 'equal))
@@ -483,11 +489,14 @@ Returns non-nil if the new state is enabled.
     (dolist (buffer (buffer-list))
       (with-current-buffer buffer
         (when (sort-tab-is-normal-buffer-p buffer)
-          (if (eq major-mode 'eaf-mode)
-              (puthash (format "eaf:%s" eaf--buffer-app-name) "" mode-table)
-            (puthash (prin1-to-string major-mode) "" mode-table)))))
+          (puthash (sort-tab-get-current-buffer-mode) "" mode-table))))
     (maphash (lambda (k v) (push k modes)) mode-table)
     modes))
+
+(defun sort-tab-get-current-buffer-mode ()
+  (if (eq major-mode 'eaf-mode)
+      (format "eaf:%s" eaf--buffer-app-name)
+    (prin1-to-string major-mode)))
 
 (defun sort-tab-select-visible-nth-tab (tab-index)
   (switch-to-buffer (nth (1- tab-index) sort-tab-visible-buffers)))
