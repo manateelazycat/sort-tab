@@ -463,6 +463,32 @@ Returns non-nil if the new state is enabled.
     (dolist (buf visible-buffers)
       (kill-buffer buf))))
 
+(defun sort-tab-close-mode-tabs ()
+  (interactive)
+  (let ((modes (sort-tab-get-buffer-modes))
+        close-mode)
+    (setq close-mode (completing-read "Close buffers match mode: " modes))
+    (dolist (buffer (buffer-list))
+      (with-current-buffer buffer
+        (when (or (and (string-prefix-p "eaf:" close-mode)
+                       (eq major-mode 'eaf-mode)
+                       (string-equal eaf--buffer-app-name (cadr (split-string close-mode ":"))))
+                  (eq major-mode close-mode))
+          (kill-buffer buffer)
+          )))))
+
+(defun sort-tab-get-buffer-modes ()
+  (let ((mode-table (make-hash-table :test 'equal))
+        modes)
+    (dolist (buffer (buffer-list))
+      (with-current-buffer buffer
+        (when (sort-tab-is-normal-buffer-p buffer)
+          (if (eq major-mode 'eaf-mode)
+              (puthash (format "eaf:%s" eaf--buffer-app-name) "" mode-table)
+            (puthash (prin1-to-string major-mode) "" mode-table)))))
+    (maphash (lambda (k v) (push k modes)) mode-table)
+    modes))
+
 (defun sort-tab-select-visible-nth-tab (tab-index)
   (switch-to-buffer (nth (1- tab-index) sort-tab-visible-buffers)))
 

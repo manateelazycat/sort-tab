@@ -38,6 +38,8 @@ You can bind the number keys to the command ```sort-tab-select-visible-tab```, s
 (global-set-key (kbd "s-9") 'sort-tab-select-visible-tab)
 (global-set-key (kbd "s-0") 'sort-tab-select-visible-tab)
 (global-set-key (kbd "s-Q") 'sort-tab-close-all-tabs)
+(global-set-key (kbd "s-q") 'sort-tab-close-mode-tabs)
+(global-set-key (kbd "C-;") 'sort-tab-close-current-tab)
 ```
 
 This function automatically recognizes the number at the end of the keystroke
