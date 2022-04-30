@@ -248,17 +248,29 @@ Returns non-nil if the new state is enabled.
     (and (eq major-mode 'eaf-mode)
          (equal eaf--buffer-app-name "browser"))))
 
+(defun sort-tab-is-eaf-file-manager-buffer-p (buf)
+  (with-current-buffer buf
+    (and (eq major-mode 'eaf-mode)
+         (equal eaf--buffer-app-name "file-manager"))))
+
 (defun sort-tab-buffer-freq-higher-p (buf1 buf2)
   "Return t if the used frequency of BUF1 is higher than BUF2."
-  (cond ((and (sort-tab-is-eaf-browser-buffer-p buf1)
-              (not (sort-tab-is-eaf-browser-buffer-p buf2)))
-         t)
-        ((and (sort-tab-is-eaf-browser-buffer-p buf2)
-              (not (sort-tab-is-eaf-browser-buffer-p buf1)))
-         nil)
-        (t
-         (> (/ (sort-tab-buffer-freq buf1) sort-tab-sort-weights)
-            (/ (sort-tab-buffer-freq buf2) sort-tab-sort-weights)))))
+  (cond
+   ((and (sort-tab-is-eaf-browser-buffer-p buf1)
+         (not (sort-tab-is-eaf-browser-buffer-p buf2)))
+    t)
+   ((and (sort-tab-is-eaf-browser-buffer-p buf2)
+         (not (sort-tab-is-eaf-browser-buffer-p buf1)))
+    nil)
+   ((and (sort-tab-is-eaf-file-manager-buffer-p buf1)
+         (not (sort-tab-is-eaf-file-manager-buffer-p buf2)))
+    nil)
+   ((and (sort-tab-is-eaf-file-manager-buffer-p buf2)
+         (not (sort-tab-is-eaf-file-manager-buffer-p buf1)))
+    t)
+   (t
+    (> (/ (sort-tab-buffer-freq buf1) sort-tab-sort-weights)
+       (/ (sort-tab-buffer-freq buf2) sort-tab-sort-weights)))))
 
 (defun sort-tab-is-magit-buffer-p (buf)
   (with-current-buffer buf              ;not magit buffer
