@@ -156,7 +156,9 @@ Returns non-nil if the new state is enabled.
     ;; Set Mini height to make sure sort-tab window always 1-line height.
     (setq-local window-min-height 1)
     ;; Disable wrap line.
-    (setq-local truncate-lines t))
+    (setq-local truncate-lines t)
+    ;; Disable window resize.
+    (setq-local window-size-fixed 'height))
 
   ;; Create sort-tab window.
   (sort-tab-create-window)
