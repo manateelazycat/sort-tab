@@ -500,7 +500,8 @@ Returns non-nil if the new state is enabled.
       (format "eaf:%s" eaf--buffer-app-name)
     (prin1-to-string major-mode)))
 
-(defun sort-tab-select-visible-nth-tab (tab-index)
+(defun sort-tab-select-visible-nth-tab (&optional tab-index)
+  (interactive "p")
   (switch-to-buffer (nth (1- tab-index) sort-tab-visible-buffers)))
 
 (defun sort-tab-select-visible-tab ()
