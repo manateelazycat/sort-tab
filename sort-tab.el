@@ -80,6 +80,11 @@
   "The sort weights, avoid frequent interchangements of two tabs with similar frequencies."
   :type 'integer)
 
+(defcustom sort-tab-align 'left
+  "The align of sort-tab."
+  :type '(choice (const :tag "Left" left)
+                 (const :tag "Center" center)))
+
 (defface sort-tab-current-tab-face
   '((((background light))
      :background "#d5c9c0" :foreground "#282828" :bold t)
@@ -100,6 +105,9 @@
     (t
      :foreground "#665c54" :bold t))
   "Face for separator.")
+
+(defconst sort-tab-propertized-separator
+  (propertize sort-tab-separator 'face 'sort-tab-separator-face))
 
 (defvar sort-tab-mode-map
   (let ((km (make-sparse-keymap)))
@@ -316,6 +324,15 @@ Returns non-nil if the new state is enabled.
      ;; Update tabs.
      ,@body
 
+     (when (eq sort-tab-align 'center)
+       (goto-char (point-min))
+       (insert sort-tab-propertized-separator)
+       (let* ((width (window-width (get-buffer-window)))
+              (content-length (length (buffer-string)))
+              (padding (max 0 (/ (- width content-length) 2))))
+         (goto-char (point-min))
+         (insert (make-string padding ?\s))))
+
      ;; Record last active buffer.
      (setq sort-tab-last-active-buffer (current-buffer))
      ))
@@ -336,7 +353,6 @@ Returns non-nil if the new state is enabled.
              (current-tab-end-column 0)
              (tab-window (get-buffer-window (sort-tab-get-buffer)))
              found-current-tab
-             tab-separator
              tab)
         (sort-tab-update-tabs
          ;; Don't sort tabs if using sort-tab commands.
@@ -346,16 +362,15 @@ Returns non-nil if the new state is enabled.
          (dolist (buf sort-tab-visible-buffers)
            ;; Insert tab.
            (setq tab (sort-tab-get-tab-name buf current-buffer))
-           (setq tab-separator (propertize sort-tab-separator 'face 'sort-tab-separator-face))
            (insert tab)
-           (insert tab-separator)
+           (insert sort-tab-propertized-separator)
 
            ;; Calculate the current tab column.
            (unless found-current-tab
              (when (eq buf current-buffer)
                (setq found-current-tab t)
                (setq current-tab-start-column current-tab-end-column))
-             (setq current-tab-end-column (+ current-tab-end-column (length tab) (length tab-separator)))))
+             (setq current-tab-end-column (+ current-tab-end-column (length tab) (length sort-tab-separator)))))
 
          ;; Make tab always visible.
          (when tab-window
@@ -369,7 +384,8 @@ Returns non-nil if the new state is enabled.
      ((sort-tab-is-hidden-buffer-p current-buffer)
       (sort-tab-update-tabs
        ;; Insert current buffer.
-       (insert (sort-tab-get-tab-name current-buffer current-buffer))))
+       (insert (sort-tab-get-tab-name current-buffer current-buffer))
+       (insert sort-tab-propertized-separator)))
      ;; Erase sort-tab content if current buffer is sort-tab buffer.
      ((string-equal sort-tab-buffer-name (buffer-name current-buffer))
       (sort-tab-update-tabs)))))
