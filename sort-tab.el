@@ -68,7 +68,7 @@
   "The height of sort-tab."
   :type 'integer)
 
-(defcustom sort-tab-name-max-length 30
+(defcustom sort-tab-name-max-length 50
   "Max length of tab name."
   :type 'int)
 
