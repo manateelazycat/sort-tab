@@ -86,24 +86,18 @@
                  (const :tag "Center" center)))
 
 (defface sort-tab-current-tab-face
-  '((((background light))
-     :background "#d5c9c0" :foreground "#282828" :bold t)
-    (t
-     :background "#504945" :foreground "#fbf1c7" :bold t))
+  `((t
+     :background ,(face-background 'highlight) :foreground ,(face-foreground 'highlight) :bold t))
   "Face for current tab.")
 
 (defface sort-tab-other-tab-face
-  '((((background light))
-     :foreground "#665c54" :bold nil)
-    (t
-     :foreground "#bdae93" :bold nil))
+  `((t
+     :foreground ,(face-foreground 'default) :bold nil))
   "Face for inactive tabs.")
 
 (defface sort-tab-separator-face
-  '((((background light))
-     :foreground "#bdae93" :bold t)
-    (t
-     :foreground "#665c54" :bold t))
+  `((t
+     :foreground ,(face-attribute 'font-lock-comment-face :foreground) :bold t))
   "Face for separator.")
 
 (defconst sort-tab-propertized-separator
