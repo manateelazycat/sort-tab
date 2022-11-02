@@ -534,6 +534,9 @@ Returns non-nil if the new state is enabled.
     (apply orig-fun arg args)))
 (advice-add #'kill-buffer :around #'sort-tab-kill-buffer-advisor)
 
+(advice-add #'bury-buffer :after #'sort-tab-update-list)
+(advice-add #'unbury-buffer :after #'sort-tab-update-list)
+
 (provide 'sort-tab)
 
 ;;; sort-tab.el ends here
