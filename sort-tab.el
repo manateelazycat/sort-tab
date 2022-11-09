@@ -129,20 +129,6 @@
 
 (defvar sort-tab-last-active-buffer nil)
 
-(define-minor-mode sort-tab-mode
-  "Toggle display of a sort-tab.
-With prefix argument ARG, turn on if positive, otherwise off.
-Returns non-nil if the new state is enabled.
-
-\\{sort-tab-mode-map}"
-  :group 'sort-tab
-  :require 'sort-tab
-  :global t
-  :keymap sort-tab-mode-map
-  (if sort-tab-mode
-      (sort-tab-turn-on)
-    (sort-tab-turn-off)))
-
 (defun sort-tab-get-buffer ()
   (get-buffer-create sort-tab-buffer-name))
 
@@ -536,6 +522,20 @@ Returns non-nil if the new state is enabled.
 
 (advice-add #'bury-buffer :after #'sort-tab-update-list)
 (advice-add #'unbury-buffer :after #'sort-tab-update-list)
+
+(define-minor-mode sort-tab-mode
+  "Toggle display of a sort-tab.
+With prefix argument ARG, turn on if positive, otherwise off.
+Returns non-nil if the new state is enabled.
+
+\\{sort-tab-mode-map}"
+  :group 'sort-tab
+  :require 'sort-tab
+  :global t
+  :keymap sort-tab-mode-map
+  (if sort-tab-mode
+      (sort-tab-turn-on)
+    (sort-tab-turn-off)))
 
 (provide 'sort-tab)
 
