@@ -542,7 +542,7 @@ Returns non-nil if the new state is enabled.
 
         ;; Add hook for emacs daemon.
         (when (and (fboundp 'daemonp) (daemonp))
-          (add-hook 'after-make-frame-functions #'initialize-sort-tab-delay)
+          (add-hook 'after-make-frame-functions #'initialize-sort-tab-delay t)
           ))
     (progn
       (sort-tab-turn-off)
