@@ -326,8 +326,11 @@
 (defun sort-tab-update-list ()
   (let ((current-buffer (window-buffer)))
     (cond
+     ;; Erase sort-tab content if current buffer is sort-tab buffer.
+     ((string-equal sort-tab-buffer-name (buffer-name current-buffer))
+      (sort-tab-update-tabs))
      ;; Display tabs if current-buffer is normal buffer.
-     ((sort-tab-is-normal-buffer-p current-buffer)
+     (t
       ;; Debug usage.
       ;; (with-current-buffer (get-buffer-create "sort-tab-debug")
       ;;   (goto-char (point-max))
@@ -341,6 +344,11 @@
              found-current-tab
              tab)
         (sort-tab-update-tabs
+         ;; Show hide buffer at left when current buffer is match hidden rule.
+         (when (sort-tab-is-hidden-buffer-p current-buffer)
+           (insert (sort-tab-get-tab-name current-buffer current-buffer))
+           (insert sort-tab-propertized-separator))
+
          ;; Don't sort tabs if using sort-tab commands.
          (when (not (string-prefix-p "sort-tab-" (prin1-to-string last-command)))
            (setq sort-tab-visible-buffers (sort-tab-get-buffer-list)))
@@ -365,16 +373,7 @@
                     (scroll-left (+ (- current-tab-end-column (window-hscroll) (window-width)) (/ (window-width) 2))))
                    ((< current-tab-start-column (window-hscroll))
                     (set-window-hscroll tab-window current-tab-start-column))
-                   ))))))
-     ;; Only display hide buffer at top if current buffer is match hide rule.
-     ((sort-tab-is-hidden-buffer-p current-buffer)
-      (sort-tab-update-tabs
-       ;; Insert current buffer.
-       (insert (sort-tab-get-tab-name current-buffer current-buffer))
-       (insert sort-tab-propertized-separator)))
-     ;; Erase sort-tab content if current buffer is sort-tab buffer.
-     ((string-equal sort-tab-buffer-name (buffer-name current-buffer))
-      (sort-tab-update-tabs)))))
+                   )))))))))
 
 (defun sort-tab-get-tab-name (buf current-buffer)
   (propertize
