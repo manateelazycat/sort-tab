@@ -517,9 +517,13 @@
   (if (equal (buffer-name) sort-tab-buffer-name)
       (message "sort-tab buffer can't be kill, please use `sort-tab-turn-off' command to quit sort-tab.")
     (apply orig-fun arg args)))
+
+(defun sort-tab-bury-buffer-advisor (&optional arg)
+  (sort-tab-update-list))
+
 (advice-add #'kill-buffer :around #'sort-tab-kill-buffer-advisor)
 
-(advice-add #'bury-buffer :after #'sort-tab-update-list)
+(advice-add #'bury-buffer :after #'sort-tab-bury-buffer-advisor)
 (advice-add #'unbury-buffer :after #'sort-tab-update-list)
 
 (defun initialize-sort-tab-delay (&optional frame)
