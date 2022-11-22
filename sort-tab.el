@@ -439,6 +439,11 @@
   (interactive)
   (switch-to-buffer (sort-tab-get-last-buffer)))
 
+(defun sort-tab-close-current-tab-and-select-previous ()
+  (interactive)
+  (let* ((buf (window-buffer)))
+    (sort-tab-kill-buffer buf)))
+
 (defun sort-tab-close-current-tab ()
   (interactive)
   (let* ((buf (window-buffer))
