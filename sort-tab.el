@@ -534,6 +534,7 @@
 (defun initialize-sort-tab-delay (&optional frame)
   (run-with-idle-timer 0 nil 'sort-tab-turn-on))
 
+;;;###autoload
 (define-minor-mode sort-tab-mode
   "Toggle display of a sort-tab.
 With prefix argument ARG, turn on if positive, otherwise off.
