@@ -350,7 +350,7 @@
            (insert sort-tab-propertized-separator))
 
          ;; Don't sort tabs if using sort-tab commands.
-         (when (not (string-prefix-p "sort-tab-" (prin1-to-string last-command)))
+         (unless (string-prefix-p "sort-tab-" (prin1-to-string last-command))
            (setq sort-tab-visible-buffers (sort-tab-get-buffer-list)))
 
          (dolist (buf sort-tab-visible-buffers)
@@ -393,10 +393,10 @@
      'sort-tab-other-tab-face)))
 
 (defun sort-tab-get-buffer-list ()
-  (let ((bufs (buffer-list)))
-    (setq bufs (cl-remove-if #'sort-tab-buffer-need-hide-p bufs))
-    (setq bufs (sort bufs #'sort-tab-buffer-freq-higher-p))
-    bufs))
+  (sort (cl-remove-if
+         #'sort-tab-buffer-need-hide-p
+         (buffer-list))
+        #'sort-tab-buffer-freq-higher-p))
 
 (defun sort-tab-get-index ()
   (cl-position (window-buffer) sort-tab-visible-buffers :test #'eq))
@@ -527,7 +527,6 @@
   (sort-tab-update-list))
 
 (advice-add #'kill-buffer :around #'sort-tab-kill-buffer-advisor)
-
 (advice-add #'bury-buffer :after #'sort-tab-bury-buffer-advisor)
 (advice-add #'unbury-buffer :after #'sort-tab-update-list)
 
@@ -551,15 +550,13 @@ Returns non-nil if the new state is enabled.
 
         ;; Add hook for emacs daemon.
         (when (and (fboundp 'daemonp) (daemonp))
-          (add-hook 'after-make-frame-functions #'initialize-sort-tab-delay t)
-          ))
-    (progn
-      (sort-tab-turn-off)
+          (add-hook 'after-make-frame-functions #'initialize-sort-tab-delay t)))
+    (sort-tab-turn-off)
 
-      ;; Remove hook for emacs daemon.
-      (when (and (fboundp 'daemonp) (daemonp))
-        (remove-hook 'after-make-frame-functions #'initialize-sort-tab-delay)
-        ))))
+    ;; Remove hook for emacs daemon.
+    (when (and (fboundp 'daemonp) (daemonp))
+      (remove-hook 'after-make-frame-functions #'initialize-sort-tab-delay)
+      )))
 
 (provide 'sort-tab)
 
