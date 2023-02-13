@@ -76,10 +76,6 @@
   "The separator between tabs."
   :type 'string)
 
-(defcustom sort-tab-sort-weights 5
-  "The sort weights, avoid frequent interchangements of two tabs with similar frequencies."
-  :type 'integer)
-
 (defcustom sort-tab-align 'left
   "The align of sort-tab."
   :type '(choice (const :tag "Left" left)
@@ -252,12 +248,14 @@
 (defun sort-tab-buffer-freq-higher-p (buf1 buf2)
   "Return t if the used frequency of BUF1 is higher than BUF2."
   (cond
+   ;; EAF Browser tab sorted first.
    ((and (sort-tab-is-eaf-browser-buffer-p buf1)
          (not (sort-tab-is-eaf-browser-buffer-p buf2)))
     t)
    ((and (sort-tab-is-eaf-browser-buffer-p buf2)
          (not (sort-tab-is-eaf-browser-buffer-p buf1)))
     nil)
+   ;; EAF File manager tab sorted last.
    ((and (sort-tab-is-eaf-file-manager-buffer-p buf1)
          (not (sort-tab-is-eaf-file-manager-buffer-p buf2)))
     nil)
@@ -265,8 +263,16 @@
          (not (sort-tab-is-eaf-file-manager-buffer-p buf1)))
     t)
    (t
-    (> (/ (sort-tab-buffer-freq buf1) sort-tab-sort-weights)
-       (/ (sort-tab-buffer-freq buf2) sort-tab-sort-weights)))))
+    (let ((buf1-index (or (cl-position buf1 sort-tab-visible-buffers :test #'eq) -1))
+          (buf2-index (or (cl-position buf2 sort-tab-visible-buffers :test #'eq) -1)))
+      ;; Do not swapped tab if two tags are adjacent and current command is next or prev tab.
+      (if (and (<= (abs (- buf1-index buf2-index)) 1)
+               (member this-command '(sort-tab-select-next-tab sort-tab-select-prev-tab)))
+          (< buf1-index buf2-index)
+
+        ;; Otherwise, sort by frequency of tab.
+        (> (sort-tab-buffer-freq buf1) (sort-tab-buffer-freq buf2) )
+        )))))
 
 (defun sort-tab-is-magit-buffer-p (buf)
   (with-current-buffer buf              ;not magit buffer
