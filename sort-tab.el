@@ -81,6 +81,10 @@
   :type '(choice (const :tag "Left" left)
                  (const :tag "Center" center)))
 
+(defcustom sort-tab-show-index-number nil
+  "Show index number before tab name."
+  :type 'boolean)
+
 (defface sort-tab-current-tab-face
   '((((background light))
      :background "#d5c9c0" :foreground "#282828" :bold t)
@@ -348,7 +352,8 @@
              (current-tab-end-column 0)
              (tab-window (get-buffer-window (sort-tab-get-buffer)))
              found-current-tab
-             tab)
+             tab
+             (buffer-index -1))
         (sort-tab-update-tabs
          ;; Show hide buffer at left when current buffer is match hidden rule.
          (when (sort-tab-is-hidden-buffer-p current-buffer)
@@ -361,7 +366,8 @@
 
          (dolist (buf sort-tab-visible-buffers)
            ;; Insert tab.
-           (setq tab (sort-tab-get-tab-name buf current-buffer))
+           (setq buffer-index (+ buffer-index 1))
+           (setq tab (sort-tab-get-tab-name buf current-buffer buffer-index))
            (insert tab)
            (insert sort-tab-propertized-separator)
 
@@ -381,9 +387,13 @@
                     (set-window-hscroll tab-window current-tab-start-column))
                    )))))))))
 
-(defun sort-tab-get-tab-name (buf current-buffer)
+(defun sort-tab-get-tab-name (buf current-buffer &optional buffer-index)
   (propertize
-   (format " %s "
+   (format " %s%s "
+           (if (or (not sort-tab-show-index-number) (not buffer-index) (> buffer-index 8))
+               ""
+             (let ((show-numbers '("①" "②" "③" "④" "⑤" "⑥" "⑦" "⑧" "⑨")))
+               (concat (nth buffer-index show-numbers) " ")))
            (let ((bufname (buffer-name buf))
                  (ellipsis "..."))
              ;; We need remove space in web page title.
