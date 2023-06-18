@@ -485,6 +485,15 @@
     (dolist (buf visible-buffers)
       (kill-buffer buf))))
 
+(defun sort-tab-close-other-tabs ()
+  (interactive)
+  (let* ((current-buf (current-buffer))
+         (visible-buffers sort-tab-visible-buffers))
+    (setq sort-tab-visible-buffers '(current-buf))
+    (dolist (buf visible-buffers)
+      (unless (eq buf current-buf)
+        (kill-buffer buf)))))
+
 (defun sort-tab-close-mode-tabs ()
   (interactive)
   (let ((modes (sort-tab-get-buffer-modes))
