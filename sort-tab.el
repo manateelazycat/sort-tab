@@ -85,6 +85,13 @@
   "Show index number before tab name."
   :type 'boolean)
 
+(defcustom sort-tab-hide-function nil
+  "Customize function to hide buffer match rule.
+
+Customize function only need argument `buffer', you can write any code to filter buffer.
+
+If you want buffer hide, return t, or return nil.")
+
 (defface sort-tab-current-tab-face
   '((((background light))
      :background "#d5c9c0" :foreground "#282828" :bold t)
@@ -293,6 +300,8 @@
      (cl-some (lambda (prefix) (string-prefix-p prefix name)) '("*" " *" "COMMIT_EDITMSG"))
      (eq (aref name 0) ?\s)
      (sort-tab-is-magit-buffer-p buf)
+     (when sort-tab-hide-function
+       (funcall sort-tab-hide-function buf))
      )))
 
 (defun sort-tab-is-normal-buffer-p (current-buffer)

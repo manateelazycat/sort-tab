@@ -44,3 +44,6 @@ You can bind the number keys to the command ```sort-tab-select-visible-tab```, s
 
 This function automatically recognizes the number at the end of the keystroke
 and switches to the tab of the corresponding index.
+
+## Option
+* sort-tab-hide-function: you can customize this function to hide tab that match some rule, example, if we want hide all dired buffer, you can customize this function like this `(setq sort-tab-hide-function '(lambda (buf) (with-current-buffer buf (derived-mode-p 'dired-mode))))` 
