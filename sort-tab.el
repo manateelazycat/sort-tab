@@ -342,41 +342,54 @@ If you want buffer hide, return t, or return nil.")
      (setq sort-tab-last-active-buffer (current-buffer))
      ))
 
-(defun sort-tab-update-list ()
-  (let ((current-buffer (window-buffer)))
+(defun sort-tab-get-visible-buffer-infos ()
+  (let* ((current-buffer (window-buffer))
+         (buffer-index -1)
+         visible-buffer-infos)
     (cond
-     ;; Erase sort-tab content if current buffer is sort-tab buffer.
+     ;; Return empty list if current buffer is sort-tab buffer.
      ((string-equal sort-tab-buffer-name (buffer-name current-buffer))
-      (sort-tab-update-tabs))
-     ;; Display tabs if current-buffer is normal buffer.
+      nil)
      (t
-      ;; Debug usage.
-      ;; (with-current-buffer (get-buffer-create "sort-tab-debug")
-      ;;   (goto-char (point-max))
-      ;;   (insert (format "**** %s %s\n"
-      ;;                   last-command
-      ;;                   (buffer-name current-buffer))))
+      ;; Show hide buffer at left when current buffer is match hidden rule.
+      (when (sort-tab-is-hidden-buffer-p current-buffer)
+        (add-to-list 'visible-buffer-infos (cons current-buffer (sort-tab-get-tab-name current-buffer current-buffer)) t))
 
-      (let* ((current-tab-start-column 0)
-             (current-tab-end-column 0)
-             (tab-window (get-buffer-window (sort-tab-get-buffer)))
-             found-current-tab
-             tab
-             (buffer-index -1))
-        (sort-tab-update-tabs
-         ;; Show hide buffer at left when current buffer is match hidden rule.
-         (when (sort-tab-is-hidden-buffer-p current-buffer)
-           (insert (sort-tab-get-tab-name current-buffer current-buffer))
-           (insert sort-tab-propertized-separator))
+      ;; Don't sort tabs if using sort-tab commands.
+      (unless (string-prefix-p "sort-tab-" (prin1-to-string last-command))
+        (setq sort-tab-visible-buffers (sort-tab-get-buffer-list)))
 
-         ;; Don't sort tabs if using sort-tab commands.
-         (unless (string-prefix-p "sort-tab-" (prin1-to-string last-command))
-           (setq sort-tab-visible-buffers (sort-tab-get-buffer-list)))
+      (dolist (buf sort-tab-visible-buffers)
+        ;; Insert tab.
+        (setq buffer-index (+ buffer-index 1))
+        (setq tab (sort-tab-get-tab-name buf current-buffer buffer-index))
+        (add-to-list 'visible-buffer-infos (cons buf tab) t))
 
-         (dolist (buf sort-tab-visible-buffers)
+      visible-buffer-infos
+      ))))
+
+(defun sort-tab-update-list ()
+  ;; Debug usage.
+  ;; (with-current-buffer (get-buffer-create "sort-tab-debug")
+  ;;   (goto-char (point-max))
+  ;;   (insert (format "**** %s %s\n"
+  ;;                   last-command
+  ;;                   (buffer-name current-buffer))))
+
+  (let* ((visible-buffer-infos (sort-tab-get-visible-buffer-infos))
+         (current-buffer (window-buffer)))
+    (sort-tab-update-tabs
+     (when visible-buffer-infos
+       (let* ((current-tab-start-column 0)
+              (current-tab-end-column 0)
+              (tab-window (get-buffer-window (sort-tab-get-buffer)))
+              found-current-tab
+              buf
+              tab)
+         (dolist (buf-info visible-buffer-infos)
            ;; Insert tab.
-           (setq buffer-index (+ buffer-index 1))
-           (setq tab (sort-tab-get-tab-name buf current-buffer buffer-index))
+           (setq buf (car buf-info))
+           (setq tab (cdr buf-info))
            (insert tab)
            (insert sort-tab-propertized-separator)
 
@@ -394,7 +407,7 @@ If you want buffer hide, return t, or return nil.")
                     (scroll-left (+ (- current-tab-end-column (window-hscroll) (window-width)) (/ (window-width) 2))))
                    ((< current-tab-start-column (window-hscroll))
                     (set-window-hscroll tab-window current-tab-start-column))
-                   )))))))))
+                   ))))))))
 
 (defun sort-tab-get-tab-name (buf current-buffer &optional buffer-index)
   (propertize
