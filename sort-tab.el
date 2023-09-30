@@ -92,6 +92,9 @@ Customize function only need argument `buffer', you can write any code to filter
 
 If you want buffer hide, return t, or return nil.")
 
+(defcustom sort-tab-render-function 'sort-tab-render-tabs
+  "Customize function to render tabs.")
+
 (defface sort-tab-current-tab-face
   '((((background light))
      :background "#d5c9c0" :foreground "#282828" :bold t)
@@ -368,6 +371,38 @@ If you want buffer hide, return t, or return nil.")
       visible-buffer-infos
       ))))
 
+(defun sort-tab-render-tabs (visible-buffer-infos current-buffer)
+  (sort-tab-update-tabs
+   (when visible-buffer-infos
+     (let* ((current-tab-start-column 0)
+            (current-tab-end-column 0)
+            (tab-window (get-buffer-window (sort-tab-get-buffer)))
+            found-current-tab
+            buf
+            tab)
+       (dolist (buf-info visible-buffer-infos)
+         ;; Insert tab.
+         (setq buf (car buf-info))
+         (setq tab (cdr buf-info))
+         (insert tab)
+         (insert sort-tab-propertized-separator)
+
+         ;; Calculate the current tab column.
+         (unless found-current-tab
+           (when (eq buf current-buffer)
+             (setq found-current-tab t)
+             (setq current-tab-start-column current-tab-end-column))
+           (setq current-tab-end-column (+ current-tab-end-column (length tab) (length sort-tab-separator)))))
+
+       ;; Make tab always visible.
+       (when tab-window
+         (with-selected-window tab-window
+           (cond ((> current-tab-end-column (+ (window-hscroll) (window-width)))
+                  (scroll-left (+ (- current-tab-end-column (window-hscroll) (window-width)) (/ (window-width) 2))))
+                 ((< current-tab-start-column (window-hscroll))
+                  (set-window-hscroll tab-window current-tab-start-column))
+                 )))))))
+
 (defun sort-tab-update-list ()
   ;; Debug usage.
   ;; (with-current-buffer (get-buffer-create "sort-tab-debug")
@@ -378,36 +413,8 @@ If you want buffer hide, return t, or return nil.")
 
   (let* ((visible-buffer-infos (sort-tab-get-visible-buffer-infos))
          (current-buffer (window-buffer)))
-    (sort-tab-update-tabs
-     (when visible-buffer-infos
-       (let* ((current-tab-start-column 0)
-              (current-tab-end-column 0)
-              (tab-window (get-buffer-window (sort-tab-get-buffer)))
-              found-current-tab
-              buf
-              tab)
-         (dolist (buf-info visible-buffer-infos)
-           ;; Insert tab.
-           (setq buf (car buf-info))
-           (setq tab (cdr buf-info))
-           (insert tab)
-           (insert sort-tab-propertized-separator)
-
-           ;; Calculate the current tab column.
-           (unless found-current-tab
-             (when (eq buf current-buffer)
-               (setq found-current-tab t)
-               (setq current-tab-start-column current-tab-end-column))
-             (setq current-tab-end-column (+ current-tab-end-column (length tab) (length sort-tab-separator)))))
-
-         ;; Make tab always visible.
-         (when tab-window
-           (with-selected-window tab-window
-             (cond ((> current-tab-end-column (+ (window-hscroll) (window-width)))
-                    (scroll-left (+ (- current-tab-end-column (window-hscroll) (window-width)) (/ (window-width) 2))))
-                   ((< current-tab-start-column (window-hscroll))
-                    (set-window-hscroll tab-window current-tab-start-column))
-                   ))))))))
+    (when sort-tab-render-function
+      (funcall sort-tab-render-function visible-buffer-infos current-buffer))))
 
 (defun sort-tab-get-tab-name (buf current-buffer &optional buffer-index)
   (propertize
