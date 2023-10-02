@@ -347,7 +347,6 @@ If you want buffer hide, return t, or return nil.")
 
 (defun sort-tab-get-visible-buffer-infos ()
   (let* ((current-buffer (window-buffer))
-         (buffer-index -1)
          visible-buffer-infos)
     (cond
      ;; Return empty list if current buffer is sort-tab buffer.
@@ -356,17 +355,14 @@ If you want buffer hide, return t, or return nil.")
      (t
       ;; Show hide buffer at left when current buffer is match hidden rule.
       (when (sort-tab-is-hidden-buffer-p current-buffer)
-        (add-to-list 'visible-buffer-infos (cons current-buffer (sort-tab-get-tab-name current-buffer current-buffer)) t))
+        (add-to-list 'visible-buffer-infos current-buffer t))
 
       ;; Don't sort tabs if using sort-tab commands.
       (unless (string-prefix-p "sort-tab-" (prin1-to-string last-command))
         (setq sort-tab-visible-buffers (sort-tab-get-buffer-list)))
 
       (dolist (buf sort-tab-visible-buffers)
-        ;; Insert tab.
-        (setq buffer-index (+ buffer-index 1))
-        (setq tab (sort-tab-get-tab-name buf current-buffer buffer-index))
-        (add-to-list 'visible-buffer-infos (cons buf tab) t))
+        (add-to-list 'visible-buffer-infos buf t))
 
       visible-buffer-infos
       ))))
@@ -377,13 +373,13 @@ If you want buffer hide, return t, or return nil.")
      (let* ((current-tab-start-column 0)
             (current-tab-end-column 0)
             (tab-window (get-buffer-window (sort-tab-get-buffer)))
+            (buffer-index -1)
             found-current-tab
-            buf
             tab)
-       (dolist (buf-info visible-buffer-infos)
+       (dolist (buf visible-buffer-infos)
          ;; Insert tab.
-         (setq buf (car buf-info))
-         (setq tab (cdr buf-info))
+         (setq buffer-index (+ buffer-index 1))
+         (setq tab (sort-tab-get-tab-name buf current-buffer buffer-index))
          (insert tab)
          (insert sort-tab-propertized-separator)
 
@@ -411,10 +407,8 @@ If you want buffer hide, return t, or return nil.")
   ;;                   last-command
   ;;                   (buffer-name current-buffer))))
 
-  (let* ((visible-buffer-infos (sort-tab-get-visible-buffer-infos))
-         (current-buffer (window-buffer)))
-    (when sort-tab-render-function
-      (funcall sort-tab-render-function visible-buffer-infos current-buffer))))
+  (when sort-tab-render-function
+    (funcall sort-tab-render-function (sort-tab-get-visible-buffer-infos) (window-buffer))))
 
 (defun sort-tab-get-tab-name (buf current-buffer &optional buffer-index)
   (propertize
