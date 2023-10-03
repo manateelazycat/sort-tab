@@ -64,10 +64,6 @@
   "The buffer name of sort-tab."
   :type 'string)
 
-(defcustom sort-tab-height 30
-  "The height of sort-tab."
-  :type 'integer)
-
 (defcustom sort-tab-name-max-length 50
   "Max length of tab name."
   :type 'int)
