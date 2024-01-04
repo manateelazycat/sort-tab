@@ -261,6 +261,11 @@ If you want buffer hide, return t, or return nil.")
     (and (eq major-mode 'eaf-mode)
          (equal eaf--buffer-app-name "file-manager"))))
 
+;; Let ace-window ignore *sort-tab* buffer.
+(when (featurep 'ace-window)
+  (with-eval-after-load 'ace-window
+    (add-to-list 'aw-ignored-buffers "*sort-tab*")))
+
 (defun sort-tab-buffer-freq-higher-p (buf1 buf2)
   "Return t if the used frequency of BUF1 is higher than BUF2."
   (cond
