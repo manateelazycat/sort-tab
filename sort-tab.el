@@ -169,6 +169,12 @@ If you want buffer hide, return t, or return nil.")
   ;; Update sort-tab buffer list.
   (sort-tab-update-list)
 
+  ;; Keymap
+  (with-current-buffer "*sort-tab*"
+    (local-set-key (kbd "<mouse-1>") 'push-button)
+    (local-set-key (kbd "<down-mouse-1>") 'push-button)
+    (local-set-key (kbd "<drag-mouse-1>") 'push-button))
+
   ;; Add update hook.
   (add-hook 'buffer-list-update-hook #'sort-tab-update-list))
 
@@ -376,7 +382,10 @@ If you want buffer hide, return t, or return nil.")
          ;; Insert tab.
          (setq buffer-index (+ buffer-index 1))
          (setq tab (sort-tab-get-tab-name buf current-buffer buffer-index))
-         (insert tab)
+         (insert-button tab
+           'action `(lambda (x)
+                      (sort-tab-select-visible-nth-tab ,(1+ buffer-index)))
+           'face '(:underline nil))
          (insert sort-tab-propertized-separator)
 
          ;; Calculate the current tab column.
