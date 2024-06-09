@@ -383,14 +383,15 @@ If you want buffer hide, return t, or return nil.")
             (buffer-index -1)
             found-current-tab
             tab)
+       ;; Calculate the current tab column.
        (dolist (buf visible-buffer-infos)
          ;; Insert tab.
          (setq buffer-index (+ buffer-index 1))
          (setq tab (sort-tab-get-tab-name buf current-buffer buffer-index))
          (insert-button tab
-           'action `(lambda (x)
-                      (sort-tab-select-visible-nth-tab ,(1+ buffer-index)))
-           'face '(:underline nil))
+                        'action `(lambda (x)
+                                   (sort-tab-select-visible-nth-tab ,(1+ buffer-index)))
+                        'face '(:underline nil))
          (insert sort-tab-propertized-separator)
 
          ;; Calculate the current tab column.
@@ -399,6 +400,11 @@ If you want buffer hide, return t, or return nil.")
              (setq found-current-tab t)
              (setq current-tab-start-column current-tab-end-column))
            (setq current-tab-end-column (+ current-tab-end-column (length tab) (length sort-tab-separator)))))
+
+       ;; Adjust tab column when current buffer is minibuffer.
+       (when (window-minibuffer-p)
+         (setq current-tab-start-column 0)
+         (setq current-tab-end-column 0))
 
        ;; Make tab always visible.
        (when tab-window
@@ -418,7 +424,11 @@ If you want buffer hide, return t, or return nil.")
   ;;                   (buffer-name current-buffer))))
 
   (when sort-tab-render-function
-    (funcall sort-tab-render-function (sort-tab-get-visible-buffer-infos) (window-buffer))))
+    (funcall sort-tab-render-function (sort-tab-get-visible-buffer-infos)
+             (if (minibufferp)
+                 ;; Return buffer before enter in minibuffer.
+                 (window-buffer (minibuffer-selected-window))
+               (window-buffer)))))
 
 (defun sort-tab-get-tab-name (buf current-buffer &optional buffer-index)
   (propertize
