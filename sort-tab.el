@@ -523,6 +523,8 @@ If you want buffer hide, return t, or return nil.")
 
 (defun sort-tab-close-all-tabs ()
   (interactive)
+  ;; Force redisplay, make sure `sort-tab-visible-buffers' return all visible tabs.
+  (redisplay t)
   (let ((visible-buffers sort-tab-visible-buffers))
     (setq sort-tab-visible-buffers nil)
     (mapc #'kill-buffer visible-buffers)
