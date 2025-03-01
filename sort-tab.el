@@ -532,6 +532,7 @@ If you want buffer hide, return t, or return nil.")
 
 (defun sort-tab-close-other-tabs ()
   (interactive)
+  ;; Force redisplay, make sure `sort-tab-visible-buffers' return all visible tabs.
   (let* ((current-buf (current-buffer))
          (other-buffers (cl-remove-if (lambda (buf) (eq buf current-buf)) sort-tab-visible-buffers)))
     (setq sort-tab-visible-buffers '(current-buf))
