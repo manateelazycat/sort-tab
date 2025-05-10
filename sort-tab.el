@@ -176,7 +176,9 @@ If you want buffer hide, return t, or return nil.")
     (local-set-key (kbd "<drag-mouse-1>") 'push-button))
 
   ;; Add update hook.
-  (add-hook 'buffer-list-update-hook #'sort-tab-update-list))
+  (add-hook 'buffer-list-update-hook #'sort-tab-update-list)
+
+  (setq sort-tab-mode t))
 
 (defun sort-tab-create-window ()
   ;; Split top window.
